@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "cat-maquinas",
+    "title": "Máquinas de Corte & Trimmers",
+    "slug": "maquinas-corte-trimmers",
+    "description": "Clippers inalámbricas, trimmers de terminación, shavers de lámina y kits profesionales de marcas líderes.",
+    "icon": "Scissors",
+    "image": "/uploads/articulos/wahl-senior-cordless.jpeg",
+    "itemCount": 12
+  },
+  {
+    "_id": "cat-tijeras",
+    "title": "Tijeras, Navajas & Filos",
+    "slug": "tijeras-filos-profesionales",
+    "description": "Tijeras de corte microdentadas, filo dulce japonés, navajas de barbero y hojas de afeitar Treet Platinum.",
+    "icon": "Sparkles",
+    "image": "/uploads/articulos/treet-platinum-100-pack.jpeg",
+    "itemCount": 4
+  },
+  {
+    "_id": "cat-secadores",
+    "title": "Secadores & Herramientas Térmicas",
+    "slug": "secadores-herramientas-termicas",
+    "description": "Secadores de alto rendimiento con motor italiano, planchas alisadoras de titanio cerámico y bucleadoras.",
+    "icon": "Wind",
+    "image": "/uploads/articulos/secador-tucano-8600w.jpeg",
+    "itemCount": 1
+  },
+  {
+    "_id": "cat-accesorios",
+    "title": "Accesorios, Capas & Barbería",
+    "slug": "accesorios-capas-barberia",
+    "description": "Capas WMARK, peines de carbono, papel de cuello Luke Paper, rociadores, aerosoles Andis Cool Care y lubricantes.",
+    "icon": "Package",
+    "image": "/uploads/articulos/capa-wmark-negra.jpeg",
+    "itemCount": 11
+  }
+]

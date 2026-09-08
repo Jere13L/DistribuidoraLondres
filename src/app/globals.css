@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* Force pure white background and light mode */
+:root {
+  color-scheme: light !important;
+  --background: #ffffff !important;
+  --foreground: #0f172a !important;
+  --brand-red: #b91c1c;
+  --brand-red-dark: #991b1b;
+  --brand-blue: #1d4ed8;
+  --brand-blue-dark: #1e40af;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root, html, body {
+    color-scheme: light !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+}
+
+html, body, main {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Inmunizar contra extensiones Dark Reader / Night Mode forzadas */
+html[data-darkreader-mode],
+html[data-darkreader-scheme] {
+  filter: none !important;
+  background-color: #ffffff !important;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom utility for clean horizontal pills scroll without scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Form controls locked to white */
+input, textarea, select {
+  color-scheme: light !important;
+  background-color: #ffffff;
+  color: #0f172a;
+}

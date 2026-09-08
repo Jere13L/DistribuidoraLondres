@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "b-londress",
+    "name": "Londress Pro Series",
+    "slug": "londress-pro"
+  },
+  {
+    "_id": "b-wahl",
+    "name": "Wahl Professional",
+    "slug": "wahl"
+  },
+  {
+    "_id": "b-babyliss",
+    "name": "BaBylissPRO",
+    "slug": "babyliss-pro"
+  },
+  {
+    "_id": "b-vgr",
+    "name": "VGR Professional",
+    "slug": "vgr"
+  },
+  {
+    "_id": "b-wmark",
+    "name": "WMARK Professional",
+    "slug": "wmark"
+  },
+  {
+    "_id": "b-kemei",
+    "name": "Kemei Professional",
+    "slug": "kemei"
+  },
+  {
+    "_id": "b-andis",
+    "name": "Andis USA",
+    "slug": "andis"
+  },
+  {
+    "_id": "b-treet",
+    "name": "Treet Platinum",
+    "slug": "treet"
+  },
+  {
+    "_id": "b-tucano",
+    "name": "Tucano Hair Tools",
+    "slug": "tucano"
+  },
+  {
+    "_id": "b-dompelo",
+    "name": "Dom Pelo",
+    "slug": "dom-pelo"
+  },
+  {
+    "_id": "b-l3vel3",
+    "name": "L3VEL3",
+    "slug": "l3vel3"
+  },
+  {
+    "_id": "b-infinity",
+    "name": "Infinity Look's Hair",
+    "slug": "infinity"
+  }
+]
