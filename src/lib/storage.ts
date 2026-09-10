@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Product, Category, Brand, SiteSettings } from '@/types';
+import { Product, Category, Brand, SiteSettings, Inquiry } from '@/types';
 import {
   mockProducts,
   mockCategories,
@@ -13,6 +13,7 @@ const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const CATEGORIES_FILE = path.join(DATA_DIR, 'categories.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const BRANDS_FILE = path.join(DATA_DIR, 'brands.json');
+const INQUIRIES_FILE = path.join(DATA_DIR, 'inquiries.json');
 
 function ensureDataFiles() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -33,6 +34,10 @@ function ensureDataFiles() {
 
   if (!fs.existsSync(BRANDS_FILE)) {
     fs.writeFileSync(BRANDS_FILE, JSON.stringify(mockBrands, null, 2), 'utf8');
+  }
+
+  if (!fs.existsSync(INQUIRIES_FILE)) {
+    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify([], null, 2), 'utf8');
   }
 }
 
@@ -119,4 +124,59 @@ export function getLocalBrands(): Brand[] {
     return mockBrands;
   }
 }
+
+export function getLocalInquiries(): Inquiry[] {
+  try {
+    ensureDataFiles();
+    const content = fs.readFileSync(INQUIRIES_FILE, 'utf8');
+    return JSON.parse(content);
+  } catch (error) {
+    console.error('Error reading inquiries.json:', error);
+    return [];
+  }
+}
+
+export function saveLocalInquiries(inquiries: Inquiry[]): boolean {
+  try {
+    ensureDataFiles();
+    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error writing inquiries.json:', error);
+    return false;
+  }
+}
+
+export function addLocalInquiry(
+  data: Omit<Inquiry, '_id' | 'createdAt' | 'status'>
+): Inquiry {
+  const inquiries = getLocalInquiries();
+  const newInquiry: Inquiry = {
+    ...data,
+    _id: `inq-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    createdAt: new Date().toISOString(),
+    status: 'pending',
+  };
+  inquiries.unshift(newInquiry);
+  saveLocalInquiries(inquiries);
+  return newInquiry;
+}
+
+export function updateInquiryStatus(
+  id: string,
+  status: 'pending' | 'contacted' | 'archived'
+): boolean {
+  const inquiries = getLocalInquiries();
+  const idx = inquiries.findIndex((i) => i._id === id);
+  if (idx === -1) return false;
+  inquiries[idx].status = status;
+  return saveLocalInquiries(inquiries);
+}
+
+export function deleteLocalInquiry(id: string): boolean {
+  const inquiries = getLocalInquiries();
+  const filtered = inquiries.filter((i) => i._id !== id);
+  return saveLocalInquiries(filtered);
+}
+
 

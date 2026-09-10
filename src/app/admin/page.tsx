@@ -23,23 +23,28 @@ import {
   Mail,
   ShieldCheck,
   AlertTriangle,
+  Inbox,
 } from 'lucide-react';
-import { Product, Category, SiteSettings } from '@/types';
+import { Product, Category, SiteSettings, Inquiry } from '@/types';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [authChecked, setAuthChecked] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'inquiries' | 'settings'>('products');
 
   // Data states
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Search & Filter
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
+  const [inquirySearch, setInquirySearch] = useState('');
+  const [inquiryFilter, setInquiryFilter] = useState<'all' | 'pending' | 'contacted'>('all');
+  const [deletingInquiryId, setDeletingInquiryId] = useState<string | null>(null);
 
   // Modals
   const [productModalOpen, setProductModalOpen] = useState(false);
@@ -96,25 +101,62 @@ export default function AdminDashboardPage() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [pRes, cRes, sRes] = await Promise.all([
+      const [pRes, cRes, sRes, iRes] = await Promise.all([
         fetch('/api/admin/products'),
         fetch('/api/admin/categories'),
         fetch('/api/admin/settings'),
+        fetch('/api/admin/inquiries'),
       ]);
 
-      const [pData, cData, sData] = await Promise.all([
+      const [pData, cData, sData, iData] = await Promise.all([
         pRes.json(),
         cRes.json(),
         sRes.json(),
+        iRes.ok ? iRes.json() : [],
       ]);
 
       setProducts(pData);
       setCategories(cData);
       setSettings(sData);
+      setInquiries(iData);
     } catch (err) {
       console.error('Error cargando datos:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleInquiryStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'pending' ? 'contacted' : 'pending';
+    try {
+      const res = await fetch('/api/admin/inquiries', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setInquiries(data.inquiries);
+        notify(newStatus === 'contacted' ? 'Consulta marcada como contactada' : 'Consulta marcada como pendiente');
+      }
+    } catch {
+      notify('Error al actualizar estado', 'error');
+    }
+  };
+
+  const handleDeleteInquiry = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/inquiries?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setInquiries(data.inquiries);
+        setDeletingInquiryId(null);
+        notify('Consulta eliminada del registro');
+      }
+    } catch {
+      notify('Error al eliminar consulta', 'error');
     }
   };
 
@@ -419,6 +461,21 @@ export default function AdminDashboardPage() {
 
   const inStockCount = products.filter((p) => p.inStock).length;
   const outOfStockCount = products.length - inStockCount;
+  const pendingInquiriesCount = inquiries.filter((i) => i.status === 'pending').length;
+
+  const filteredInquiries = inquiries.filter((inq) => {
+    if (inquiryFilter !== 'all' && inq.status !== inquiryFilter) return false;
+    if (inquirySearch.trim()) {
+      const q = inquirySearch.toLowerCase();
+      const matchBusiness = inq.businessName?.toLowerCase().includes(q);
+      const matchPerson = inq.contactPerson?.toLowerCase().includes(q);
+      const matchPhone = inq.phone?.toLowerCase().includes(q);
+      const matchCity = inq.city?.toLowerCase().includes(q);
+      const matchMessage = inq.message?.toLowerCase().includes(q);
+      return matchBusiness || matchPerson || matchPhone || matchCity || matchMessage;
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
@@ -480,7 +537,7 @@ export default function AdminDashboardPage() {
         {/* Metric Cards Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
               Total Artículos
             </span>
             <span className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 block">
@@ -498,29 +555,39 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 block">
-              A Pedido / Sin Stock
-            </span>
-            <span className="text-2xl sm:text-3xl font-bold text-amber-700 mt-1 block">
-              {outOfStockCount}
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
               Rubros Activos
             </span>
             <span className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 block">
               {categories.length}
             </span>
           </div>
+
+          <div
+            onClick={() => setActiveTab('inquiries')}
+            className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs cursor-pointer hover:border-slate-300 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
+                Consultas Web
+              </span>
+              {pendingInquiriesCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold">
+                  {pendingInquiriesCount} pendientes
+                </span>
+              )}
+            </div>
+            <span className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1 block">
+              {inquiries.length}
+            </span>
+          </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
           <button
             onClick={() => setActiveTab('products')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0 ${
               activeTab === 'products'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'text-slate-600 hover:text-black hover:bg-white'
@@ -532,19 +599,38 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => setActiveTab('categories')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0 ${
               activeTab === 'categories'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'text-slate-600 hover:text-black hover:bg-white'
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span>Rubros & Categorías</span>
+            <span>Rubros & Categorías ({categories.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('inquiries')}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0 ${
+              activeTab === 'inquiries'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-black hover:bg-white'
+            }`}
+          >
+            <Inbox className="w-4 h-4" />
+            <span>Consultas</span>
+            {pendingInquiriesCount > 0 ? (
+              <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold">
+                {pendingInquiriesCount}
+              </span>
+            ) : (
+              <span className="text-[11px] opacity-70">({inquiries.length})</span>
+            )}
           </button>
 
           <button
             onClick={() => setActiveTab('settings')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shrink-0 ${
               activeTab === 'settings'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'text-slate-600 hover:text-black hover:bg-white'
@@ -806,7 +892,188 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: CONFIGURACIÓN COMERCIAL */}
+        {/* TAB 3: CONSULTAS & MENSAJES */}
+        {activeTab === 'inquiries' && (
+          <div className="space-y-4">
+            {/* Filter and Search Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
+              <div className="relative flex-1 w-full">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={inquirySearch}
+                  onChange={(e) => setInquirySearch(e.target.value)}
+                  placeholder="Buscar por establecimiento, responsable, teléfono o mensaje..."
+                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-slate-900 font-medium"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+                <button
+                  onClick={() => setInquiryFilter('all')}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    inquiryFilter === 'all'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Todas ({inquiries.length})
+                </button>
+                <button
+                  onClick={() => setInquiryFilter('pending')}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    inquiryFilter === 'pending'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Pendientes ({pendingInquiriesCount})
+                </button>
+                <button
+                  onClick={() => setInquiryFilter('contacted')}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors ${
+                    inquiryFilter === 'contacted'
+                      ? 'bg-emerald-700 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Contactadas ({inquiries.filter((i) => i.status === 'contacted').length})
+                </button>
+              </div>
+            </div>
+
+            {/* Inquiries List */}
+            {filteredInquiries.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                  <Inbox className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">No hay consultas registradas</h3>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  {inquirySearch || inquiryFilter !== 'all'
+                    ? 'No se encontraron consultas con los filtros seleccionados.'
+                    : 'Cuando un cliente envíe una consulta desde el formulario web, quedará guardada aquí con todos sus datos de contacto.'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filteredInquiries.map((inq) => {
+                  const cleanNumber = inq.phone.replace(/\D/g, '');
+                  const waReplyUrl = `https://wa.me/${cleanNumber.startsWith('54') ? cleanNumber : '549' + cleanNumber}?text=${encodeURIComponent(`Hola ${inq.contactPerson}! Nos comunicamos desde Distribuidora Londress con respecto a tu consulta por ${inq.businessName}...`)}`;
+                  const dateFormatted = new Date(inq.createdAt).toLocaleDateString('es-AR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
+                  return (
+                    <div
+                      key={inq._id}
+                      className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs hover:border-slate-300 transition-all space-y-3"
+                    >
+                      {/* Top Row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              inq.status === 'pending'
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {inq.status === 'pending' ? 'Pendiente' : 'Contactado'}
+                          </span>
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            {dateFormatted}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleToggleInquiryStatus(inq._id, inq.status)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                              inq.status === 'pending'
+                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                            }`}
+                          >
+                            {inq.status === 'pending' ? 'Marcar como Contactado' : 'Volver a Pendiente'}
+                          </button>
+                          <button
+                            onClick={() => setDeletingInquiryId(inq._id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors"
+                            title="Eliminar consulta"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Main Info */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                            Establecimiento / Rubro
+                          </span>
+                          <h4 className="text-base font-bold text-slate-900">
+                            {inq.businessName}
+                          </h4>
+                          <span className="inline-block text-[11px] font-semibold text-slate-600 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
+                            {inq.businessType}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                            Persona de Contacto & Ubicación
+                          </span>
+                          <p className="text-xs font-bold text-slate-800">
+                            {inq.contactPerson}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            📍 {inq.city}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                            Teléfono & WhatsApp
+                          </span>
+                          <p className="text-xs font-mono font-bold text-slate-900">
+                            {inq.phone}
+                          </p>
+                          <a
+                            href={waReplyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>Responder por WhatsApp</span>
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Message Content */}
+                      <div className="pt-2">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">
+                          Mensaje o Pedido Solicitado:
+                        </span>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed whitespace-pre-wrap font-normal">
+                          {inq.message}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: CONFIGURACIÓN COMERCIAL */}
         {activeTab === 'settings' && settings && (
           <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 max-w-3xl">
             <h3 className="text-lg font-bold text-slate-900 mb-1">
@@ -1290,6 +1557,37 @@ export default function AdminDashboardPage() {
                 className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-xs font-bold text-white uppercase tracking-wider"
               >
                 Sí, Eliminar Rubro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIRMAR ELIMINACIÓN DE CONSULTA */}
+      {deletingInquiryId && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-xl text-center space-y-4">
+            <div className="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center mx-auto">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-slate-900">¿Eliminar esta consulta?</h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Esta acción removerá el registro de contacto del panel de administración.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-2 pt-2">
+              <button
+                onClick={() => setDeletingInquiryId(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDeleteInquiry(deletingInquiryId)}
+                className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-xs font-bold text-white uppercase tracking-wider"
+              >
+                Sí, Eliminar
               </button>
             </div>
           </div>

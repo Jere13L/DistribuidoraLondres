@@ -59,3 +59,16 @@ export interface SiteSettings {
   heroBadge: string;
 }
 
+export interface Inquiry {
+  _id: string;
+  createdAt: string; // ISO date string
+  businessName: string;
+  contactPerson: string;
+  phone: string;
+  city: string;
+  businessType: string;
+  message: string;
+  status: 'pending' | 'contacted' | 'archived';
+}
+
+

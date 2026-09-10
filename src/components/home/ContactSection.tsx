@@ -27,16 +27,42 @@ export function ContactSection({ settings }: ContactSectionProps) {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // 1. Guardar en base de datos local
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+    } catch (err) {
+      console.error('Error al guardar consulta:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+
+    // 2. Abrir WhatsApp con el mensaje estructurado
     const rawNumber = settings.whatsapp?.replace(/\D/g, '') || '5491123456789';
     const text = encodeURIComponent(
-      `Hola Distribuidora Londress!\n\n*Consulta Mayorista Insumos de Peluquería/Barbería:*\n• Establecimiento: ${formData.businessName}\n• Tipo: ${formData.businessType.toUpperCase()}\n• Contacto: ${formData.contactPerson}\n• Teléfono: ${formData.phone}\n• Localidad: ${formData.city}\n\n*Consulta:*\n${formData.message}`
+      `Hola Distribuidora Londress!\n\n*Consulta Mayorista Insumos de Peluquería/Barbería:*\n• Establecimiento: ${formData.businessName || 'No especificado'}\n• Tipo: ${formData.businessType.toUpperCase()}\n• Contacto: ${formData.contactPerson}\n• Teléfono: ${formData.phone}\n• Localidad: ${formData.city || 'No especificada'}\n\n*Consulta:*\n${formData.message}`
     );
     window.open(`https://wa.me/${rawNumber}?text=${text}`, '_blank');
+
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
+    setFormData({
+      businessName: '',
+      contactPerson: '',
+      phone: '',
+      city: '',
+      businessType: 'barberia',
+      message: '',
+    });
+    setTimeout(() => setSubmitted(false), 6000);
   };
 
   return (
@@ -227,16 +253,17 @@ export function ContactSection({ settings }: ContactSectionProps) {
               {/* Primary button in Sleek Charcoal */}
               <button
                 type="submit"
-                className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-black text-white font-medium text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm active:scale-98"
+                disabled={isSubmitting}
+                className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-black disabled:bg-slate-500 text-white font-medium text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm active:scale-98 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Enviar Consulta Mayorista</span>
+                <span>{isSubmitting ? 'Registrando y abriendo WhatsApp...' : 'Enviar Consulta Mayorista'}</span>
               </button>
 
               {submitted && (
-                <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs flex items-center gap-2 font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Mensaje preparado para WhatsApp. ¡Te responderemos a la brevedad!</span>
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2.5 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>¡Consulta registrada en el panel y enviada a WhatsApp! Te responderemos a la brevedad.</span>
                 </div>
               )}
             </form>
