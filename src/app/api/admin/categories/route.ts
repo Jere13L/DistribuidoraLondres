@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getLocalCategories,
-  saveLocalCategories,
-  getLocalProducts,
-  saveLocalProducts,
+  getCategoriesAsync,
+  saveCategoriesAsync,
+  getProductsAsync,
+  saveProductsAsync,
 } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
 import { Category } from '@/types';
 
 export async function GET() {
-  const categories = getLocalCategories();
+  const categories = await getCategoriesAsync();
   return NextResponse.json(categories);
 }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const categories = getLocalCategories();
+    const categories = await getCategoriesAsync();
 
     const newCategory: Category = {
       _id: body._id || `cat-${Date.now()}`,
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     };
 
     categories.push(newCategory);
-    saveLocalCategories(categories);
+    await saveCategoriesAsync(categories);
 
     return NextResponse.json({ success: true, category: newCategory });
   } catch (error) {
@@ -56,7 +56,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const updated = await req.json();
-    const categories = getLocalCategories();
+    const categories = await getCategoriesAsync();
     const index = categories.findIndex((c) => c._id === updated._id);
 
     if (index === -1) {
@@ -65,10 +65,10 @@ export async function PUT(req: NextRequest) {
 
     const prevCategory = categories[index];
     categories[index] = { ...categories[index], ...updated };
-    saveLocalCategories(categories);
+    await saveCategoriesAsync(categories);
 
     // Cascading updates to products
-    const products = getLocalProducts();
+    const products = await getProductsAsync();
     let changed = false;
     products.forEach((p) => {
       if (p.category?._id === updated._id || (prevCategory && p.category?.slug === prevCategory.slug)) {
@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest) {
       }
     });
     if (changed) {
-      saveLocalProducts(products);
+      await saveProductsAsync(products);
     }
 
     return NextResponse.json({ success: true, category: categories[index] });
@@ -108,7 +108,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
     }
 
-    const categories = getLocalCategories();
+    const categories = await getCategoriesAsync();
     const target = categories.find((c) => c._id === id);
     const filtered = categories.filter((c) => c._id !== id);
 
@@ -116,10 +116,10 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
     }
 
-    saveLocalCategories(filtered);
+    await saveCategoriesAsync(filtered);
 
     // Cascade: clear category from products
-    const products = getLocalProducts();
+    const products = await getProductsAsync();
     let changed = false;
     products.forEach((p) => {
       if (p.category?._id === id || (target && p.category?.slug === target.slug)) {
@@ -128,7 +128,7 @@ export async function DELETE(req: NextRequest) {
       }
     });
     if (changed) {
-      saveLocalProducts(products);
+      await saveProductsAsync(products);
     }
 
     return NextResponse.json({ success: true, message: 'Categoría eliminada' });
@@ -137,5 +137,3 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Error al eliminar la categoría' }, { status: 500 });
   }
 }
-
-

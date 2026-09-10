@@ -1,17 +1,17 @@
 import { Product, Category, Brand, SiteSettings } from '@/types';
 import {
-  getLocalProducts,
-  getLocalCategories,
-  getLocalBrands,
-  getLocalSettings,
+  getProductsAsync,
+  getCategoriesAsync,
+  getBrandsAsync,
+  getSettingsAsync,
 } from '@/lib/storage';
 
 /**
- * Recupera todos los productos desde la base de datos local
+ * Recupera todos los productos (desde Supabase si está configurado, o desde JSON local)
  */
 export async function getProducts(): Promise<Product[]> {
   try {
-    return getLocalProducts();
+    return await getProductsAsync();
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -23,7 +23,7 @@ export async function getProducts(): Promise<Product[]> {
  */
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const products = getLocalProducts();
+    const products = await getProductsAsync();
     return products.find((p) => p.slug === slug) || null;
   } catch (error) {
     console.error(`Error fetching product by slug (${slug}):`, error);
@@ -36,8 +36,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
  */
 export async function getCategories(): Promise<Category[]> {
   try {
-    const categories = getLocalCategories();
-    const products = getLocalProducts();
+    const categories = await getCategoriesAsync();
+    const products = await getProductsAsync();
 
     // Actualizar itemCount dinámicamente
     return categories.map((cat) => ({
@@ -55,7 +55,7 @@ export async function getCategories(): Promise<Category[]> {
  */
 export async function getBrands(): Promise<Brand[]> {
   try {
-    return getLocalBrands();
+    return await getBrandsAsync();
   } catch (error) {
     console.error('Error fetching brands:', error);
     return [];
@@ -67,7 +67,7 @@ export async function getBrands(): Promise<Brand[]> {
  */
 export async function getSiteSettings(): Promise<SiteSettings> {
   try {
-    return getLocalSettings();
+    return await getSettingsAsync();
   } catch (error) {
     console.error('Error fetching site settings:', error);
     return {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { addLocalInquiry } from '@/lib/storage';
+import { addInquiryAsync } from '@/lib/storage';
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const newInquiry = addLocalInquiry({
+    const newInquiry = await addInquiryAsync({
       businessName: businessName?.trim() || 'No especificado',
       contactPerson: contactPerson.trim(),
       phone: phone.trim(),
@@ -31,4 +31,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

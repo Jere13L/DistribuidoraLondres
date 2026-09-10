@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLocalProducts, saveLocalProducts } from '@/lib/storage';
+import { getProductsAsync, saveProductsAsync } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
 import { Product } from '@/types';
 
 export async function GET() {
-  const products = getLocalProducts();
+  const products = await getProductsAsync();
   return NextResponse.json(products);
 }
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const products = getLocalProducts();
+    const products = await getProductsAsync();
 
     const newProduct: Product = {
       _id: body._id || `prod-${Date.now()}`,
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     };
 
     products.unshift(newProduct);
-    saveLocalProducts(products);
+    await saveProductsAsync(products);
 
     return NextResponse.json({ success: true, product: newProduct });
   } catch (error) {
@@ -69,7 +69,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'ID de producto requerido' }, { status: 400 });
     }
 
-    const products = getLocalProducts();
+    const products = await getProductsAsync();
     const index = products.findIndex((p) => p._id === updatedProduct._id);
 
     if (index === -1) {
@@ -81,7 +81,7 @@ export async function PUT(req: NextRequest) {
       ...updatedProduct,
     };
 
-    saveLocalProducts(products);
+    await saveProductsAsync(products);
     return NextResponse.json({ success: true, product: products[index] });
   } catch (error) {
     console.error('Error in PUT /api/admin/products:', error);
@@ -106,14 +106,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
     }
 
-    const products = getLocalProducts();
+    const products = await getProductsAsync();
     const filtered = products.filter((p) => p._id !== id);
 
     if (filtered.length === products.length) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    saveLocalProducts(filtered);
+    await saveProductsAsync(filtered);
     return NextResponse.json({ success: true, message: 'Producto eliminado' });
   } catch (error) {
     console.error('Error in DELETE /api/admin/products:', error);
@@ -123,4 +123,3 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
-

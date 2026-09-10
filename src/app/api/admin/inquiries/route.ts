@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getLocalInquiries,
-  updateInquiryStatus,
-  deleteLocalInquiry,
+  getInquiriesAsync,
+  updateInquiryStatusAsync,
+  deleteInquiryAsync,
 } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
 
@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const inquiries = getLocalInquiries();
+  const inquiries = await getInquiriesAsync();
   return NextResponse.json(inquiries);
 }
 
@@ -28,13 +28,15 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Faltan parámetros' }, { status: 400 });
     }
 
-    const success = updateInquiryStatus(id, status);
+    const success = await updateInquiryStatusAsync(id, status);
     if (!success) {
       return NextResponse.json({ error: 'Consulta no encontrada' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, inquiries: getLocalInquiries() });
+    const inquiries = await getInquiriesAsync();
+    return NextResponse.json({ success: true, inquiries });
   } catch (error) {
+    console.error('Error in PATCH /api/admin/inquiries:', error);
     return NextResponse.json({ error: 'Error al actualizar estado' }, { status: 500 });
   }
 }
@@ -53,10 +55,11 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Falta el parámetro id' }, { status: 400 });
     }
 
-    deleteLocalInquiry(id);
-    return NextResponse.json({ success: true, inquiries: getLocalInquiries() });
+    await deleteInquiryAsync(id);
+    const inquiries = await getInquiriesAsync();
+    return NextResponse.json({ success: true, inquiries });
   } catch (error) {
+    console.error('Error in DELETE /api/admin/inquiries:', error);
     return NextResponse.json({ error: 'Error al eliminar consulta' }, { status: 500 });
   }
 }
-
