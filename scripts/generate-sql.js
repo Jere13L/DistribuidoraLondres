@@ -131,3 +131,4 @@ for (const p of products) {
 
 fs.writeFileSync('supabase_schema.sql', sql, 'utf8');
 console.log('supabase_schema.sql successfully written!');
+

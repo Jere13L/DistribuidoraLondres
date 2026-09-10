@@ -41,7 +41,15 @@ export const metadata: Metadata = {
     'cosmetica capilar mayorista',
   ],
   icons: {
-    icon: '/images/logo.jpg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', sizes: '96x96', type: 'image/png' },
+      { url: '/images/logo.jpg', type: 'image/jpeg' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
   other: {
     'color-scheme': 'light only',
