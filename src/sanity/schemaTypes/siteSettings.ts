@@ -9,7 +9,7 @@ export const siteSettingsType = defineType({
       name: 'companyName',
       title: 'Nombre de la Empresa',
       type: 'string',
-      initialValue: 'Londres Distribuidora',
+      initialValue: 'Distribuidora Londress',
     }),
     defineField({
       name: 'slogan',

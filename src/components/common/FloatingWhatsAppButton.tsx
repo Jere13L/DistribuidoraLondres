@@ -13,7 +13,7 @@ export function FloatingWhatsAppButton() {
   const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
   const cleanNumber = rawNumber.replace(/\D/g, '');
   const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(
-    'Hola Londres Distribuidora! Quisiera hacer una consulta comercial sobre su catálogo de productos.'
+    'Hola Distribuidora Londress! Quisiera hacer una consulta comercial sobre su catálogo de productos.'
   )}`;
 
   return (

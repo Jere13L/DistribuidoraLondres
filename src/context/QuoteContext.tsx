@@ -94,7 +94,7 @@ export function QuoteProvider({ children }: { children: React.ReactNode }) {
         `${idx + 1}. [${item.product.sku}] ${item.product.name}\n   - Cantidad: ${item.quantity} (${item.product.presentation})`
     );
 
-    return `Hola Londres Distribuidora, quisiera solicitar cotización y disponibilidad mayorista para los siguientes productos:\n\n${lines.join(
+    return `Hola Distribuidora Londress, quisiera solicitar cotización y disponibilidad mayorista para los siguientes productos:\n\n${lines.join(
       '\n\n'
     )}\n\n¿Podrían indicarme precios, stock y plazos de entrega? ¡Muchas gracias!`;
   };
@@ -106,7 +106,7 @@ export function QuoteProvider({ children }: { children: React.ReactNode }) {
 
     const greeting = clientName
       ? `Hola! Mi nombre es ${clientName}. `
-      : 'Hola Londres Distribuidora! ';
+      : 'Hola Distribuidora Londress! ';
 
     const body = `${greeting}Quisiera cotizar los siguientes artículos de su catálogo:\n\n${items
       .map(
