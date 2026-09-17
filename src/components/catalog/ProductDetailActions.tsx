@@ -17,7 +17,7 @@ interface ProductDetailActionsProps {
 }
 
 export function ProductDetailActions({ product }: ProductDetailActionsProps) {
-  const { addItem, items, setIsOpen } = useQuote();
+  const { addItem, items, setIsDrawerOpen } = useQuote();
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
 
@@ -30,7 +30,7 @@ export function ProductDetailActions({ product }: ProductDetailActionsProps) {
   };
 
   const handleOpenQuoteDrawer = () => {
-    setIsOpen(true);
+    setIsDrawerOpen(true);
   };
 
   const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
