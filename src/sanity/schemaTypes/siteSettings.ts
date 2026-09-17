@@ -34,11 +34,6 @@ export const siteSettingsType = defineType({
       type: 'string',
     }),
     defineField({
-      name: 'address',
-      title: 'Dirección del Depósito / Oficinas',
-      type: 'string',
-    }),
-    defineField({
       name: 'city',
       title: 'Ciudad y Provincia',
       type: 'string',

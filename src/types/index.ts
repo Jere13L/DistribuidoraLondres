@@ -51,8 +51,8 @@ export interface SiteSettings {
   whatsapp: string;
   phone: string;
   email: string;
-  address: string;
-  city: string;
+  address?: string;
+  city?: string;
   schedule: string;
   heroTitle: string;
   heroSubtitle: string;

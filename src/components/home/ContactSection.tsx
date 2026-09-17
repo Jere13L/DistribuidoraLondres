@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import {
   Phone,
   Mail,
-  MapPin,
   Clock,
   MessageCircle,
   Send,
@@ -76,24 +75,14 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 Atención Comercial
               </span>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-950">
-                Contacto & <span className="text-red-700">Depósito</span>
+                Contacto & <span className="text-red-700">Atención Directa</span>
               </h2>
               <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Atendemos a salones de belleza, barberías, academias e instituciones. Puedes contactarnos por WhatsApp o visitarnos en nuestro showroom comercial.
+                Atendemos a salones de belleza, barberías, academias y profesionales con atención y asesoramiento personalizado a través de WhatsApp y canales comerciales.
               </p>
             </div>
 
             <div className="space-y-4 text-xs text-slate-600 pt-2 border-t border-slate-100">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80 flex items-center justify-center shrink-0 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-slate-600" />
-                </div>
-                <div>
-                  <strong className="text-slate-900 block font-bold">Dirección</strong>
-                  <span>{settings.address}, {settings.city}</span>
-                </div>
-              </div>
-
               <div className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-lg bg-slate-50 text-slate-700 border border-slate-200/80 flex items-center justify-center shrink-0 mt-0.5">
                   <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />

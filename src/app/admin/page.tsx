@@ -18,7 +18,6 @@ import {
   Upload,
   Phone,
   MessageCircle,
-  MapPin,
   Clock,
   Mail,
   ShieldCheck,
@@ -1177,19 +1176,6 @@ export default function AdminDashboardPage() {
                     className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-slate-900"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Dirección del Depósito / Showroom</span>
-                </label>
-                <input
-                  type="text"
-                  value={settings.address}
-                  onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-slate-900"
-                />
               </div>
 
               <button

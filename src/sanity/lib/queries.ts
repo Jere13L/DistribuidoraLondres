@@ -87,7 +87,6 @@ export const siteSettingsQuery = groq`
     whatsapp,
     phone,
     email,
-    address,
     city,
     schedule,
     heroTitle,
