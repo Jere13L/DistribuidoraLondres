@@ -7,13 +7,7 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   Scissors,
-  Truck,
-  RotateCcw,
   CheckCircle2,
-  Cpu,
-  BatteryCharging,
-  Zap,
-  Tag
 } from 'lucide-react';
 import { getProductBySlug, getProducts } from '@/sanity/lib/client';
 import { ProductCard } from '@/components/catalog/ProductCard';
