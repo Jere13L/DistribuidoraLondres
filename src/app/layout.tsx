@@ -26,19 +26,19 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Distribuidora Londress | Insumos de Peluquería, Barbería & Máquinas',
+  title: 'Distribuidora Londress | Máquinas e Insumos de Peluquería y Barbería',
   description:
-    'Distribuidora mayorista de máquinas de corte, trimmers, shavers, tijeras profesionales, tinturas y cosmética capilar. Atención directa a salones, barberías y academias en todo el país.',
+    'Venta y distribución de máquinas de corte, trimmers, shavers, tijeras profesionales y cosmética capilar. Atención directa a salones, barberías y profesionales.',
   keywords: [
     'distribuidora londress',
     'insumos de peluqueria',
     'maquinas de corte',
     'tijeras de peluqueria',
-    'barberia mayorista',
+    'articulos de barberia',
     'clippers',
     'trimmers',
     'polvo decolorante',
-    'cosmetica capilar mayorista',
+    'cosmetica capilar profesional',
   ],
   icons: {
     icon: [

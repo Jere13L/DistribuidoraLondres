@@ -94,9 +94,9 @@ export function QuoteProvider({ children }: { children: React.ReactNode }) {
         `${idx + 1}. [${item.product.sku}] ${item.product.name}\n   - Cantidad: ${item.quantity} (${item.product.presentation})`
     );
 
-    return `Hola Distribuidora Londress, quisiera solicitar cotización y disponibilidad mayorista para los siguientes productos:\n\n${lines.join(
+    return `Hola Distribuidora Londress, quisiera solicitar cotización y disponibilidad para los siguientes productos:\n\n${lines.join(
       '\n\n'
-    )}\n\n¿Podrían indicarme precios, stock y plazos de entrega? ¡Muchas gracias!`;
+    )}\n\n¿Podrían indicarme precios y stock disponible? ¡Muchas gracias!`;
   };
 
   const getWhatsAppUrl = (clientName?: string) => {
@@ -111,11 +111,11 @@ export function QuoteProvider({ children }: { children: React.ReactNode }) {
     const body = `${greeting}Quisiera cotizar los siguientes artículos de su catálogo:\n\n${items
       .map(
         (it) =>
-          `• *${it.product.name}* (Cód: ${it.product.sku})\n   Cantidad: ${it.quantity} | Formato: ${it.product.presentation}`
+          `• *${it.product.name}* (Cód: ${it.product.sku})\n   Cantidad: ${it.quantity} | Presentación: ${it.product.presentation}`
       )
       .join(
         '\n'
-      )}\n\n¿Me confirman disponibilidad y lista de precios mayorista?`;
+      )}\n\n¿Me confirman disponibilidad y precios?`;
 
     return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(body)}`;
   };

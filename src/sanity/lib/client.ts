@@ -72,15 +72,15 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     console.error('Error fetching site settings:', error);
     return {
       companyName: 'Distribuidora Londress',
-      slogan: 'Distribución mayorista de insumos de peluquería, barbería y máquinas',
+      slogan: 'Venta y distribución de máquinas e insumos de peluquería y barbería',
       whatsapp: '5491123456789',
       phone: '+54 11 4567-8900',
       email: 'ventas@distribuidoralondress.com',
       address: 'Av. Corrientes 3820, Distrito Comercial',
       city: 'Buenos Aires, Argentina',
       schedule: 'Lunes a Viernes de 08:30 a 18:00 hs',
-      heroTitle: 'Insumos de Peluquería, Barbería y Máquinas Profesionales',
-      heroSubtitle: 'Abastecimiento integral para salones de belleza, barberías y academias.',
+      heroTitle: 'Máquinas e Insumos de Peluquería y Barbería',
+      heroSubtitle: 'Provisión integral para salones de belleza, barberías y profesionales.',
       heroBadge: 'Distribuidor Oficial Barber & Hair Salon',
     };
   }

@@ -58,5 +58,15 @@
     "_id": "b-infinity",
     "name": "Infinity Look's Hair",
     "slug": "infinity"
+  },
+  {
+    "_id": "b-jaguar",
+    "name": "Jaguar Solingen",
+    "slug": "jaguar"
+  },
+  {
+    "_id": "b-derby",
+    "name": "Derby Professional",
+    "slug": "derby"
   }
 ]

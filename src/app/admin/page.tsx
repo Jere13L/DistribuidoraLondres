@@ -185,7 +185,7 @@ export default function AdminDashboardPage() {
       setFormImages(prod.images && prod.images.length > 0 ? prod.images : ['']);
       setFormInStock(prod.inStock);
       setFormIsNew(prod.isNew || false);
-      setFormSpecs(prod.specifications || []);
+      setFormSpecs(prod.specifications && prod.specifications.length > 0 ? prod.specifications.map((s) => ({ ...s })) : []);
     } else {
       setEditingProduct(null);
       setFormName('');
@@ -202,6 +202,32 @@ export default function AdminDashboardPage() {
     }
     setProductModalOpen(true);
   };
+
+  const handleAddSpec = () => {
+    setFormSpecs((prev) => [...prev, { key: '', value: '' }]);
+  };
+
+  const handleQuickAddSpec = (presetKey: string) => {
+    setFormSpecs((prev) => {
+      if (prev.some((s) => s.key.toLowerCase() === presetKey.toLowerCase())) {
+        return prev;
+      }
+      return [...prev, { key: presetKey, value: '' }];
+    });
+  };
+
+  const handleUpdateSpec = (index: number, field: 'key' | 'value', val: string) => {
+    setFormSpecs((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: val };
+      return updated;
+    });
+  };
+
+  const handleRemoveSpec = (index: number) => {
+    setFormSpecs((prev) => prev.filter((_, i) => i !== index));
+  };
+
 
   // 5. Subida de Imagen
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,7 +280,7 @@ export default function AdminDashboardPage() {
       images: formImages.filter((img) => img.trim() !== ''),
       inStock: formInStock,
       isNew: formIsNew,
-      specifications: formSpecs.filter((s) => s.key.trim() !== ''),
+      specifications: formSpecs.filter((s) => s.key.trim() !== '' && s.value.trim() !== ''),
     };
 
     try {
@@ -757,6 +783,15 @@ export default function AdminDashboardPage() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="inline-flex items-center gap-1">
+                            <a
+                              href={`/catalogo/${p.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                              title="Ver ficha técnica en vivo"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
                             <button
                               onClick={() => handleOpenProductModal(p)}
                               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
@@ -791,7 +826,7 @@ export default function AdminDashboardPage() {
                   Rubros y Categorías de Distribución
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Organizá los rubros del catálogo mayorista y las portadas visuales del Bento Grid.
+                  Organizá los rubros del catálogo y las portadas visuales del Bento Grid.
                 </p>
               </div>
               <button
@@ -1172,17 +1207,31 @@ export default function AdminDashboardPage() {
       {/* MODAL CREAR / EDITAR PRODUCTO */}
       {productModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl border border-slate-200 max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-5 my-8">
+          <div className="bg-white rounded-3xl border border-slate-200 max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-5 my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-serif font-bold text-slate-900">
-                {editingProduct ? 'Editar Artículo' : 'Nuevo Artículo Mayorista'}
+                {editingProduct ? 'Editar Artículo' : 'Nuevo Artículo'}
               </h3>
-              <button
-                onClick={() => setProductModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-900"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {editingProduct && (
+                  <a
+                    href={`/catalogo/${editingProduct.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors"
+                    title="Ver página en vivo"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Ver página</span>
+                  </a>
+                )}
+                <button
+                  onClick={() => setProductModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-900"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
@@ -1240,7 +1289,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Presentación Mayorista</label>
+                  <label className="block font-bold text-slate-700 mb-1">Presentación del Artículo</label>
                   <input
                     type="text"
                     value={formPresentation}
@@ -1285,7 +1334,7 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Descripción Breve</label>
+                <label className="block font-bold text-slate-700 mb-1">Descripción Breve (Para tarjetas de catálogo)</label>
                 <textarea
                   rows={2}
                   value={formShortDesc}
@@ -1294,6 +1343,93 @@ export default function AdminDashboardPage() {
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
                 />
               </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Descripción Técnica Detallada (Página individual del producto)
+                </label>
+                <textarea
+                  rows={4}
+                  value={formDesc}
+                  onChange={(e) => setFormDesc(e.target.value)}
+                  placeholder="Explica detalladamente la tecnología, motor, ergonomía, recomendaciones y características que se leerán en la página del producto..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-slate-900"
+                />
+              </div>
+
+              {/* Editor de Especificaciones Técnicas */}
+              <div className="space-y-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block font-bold text-slate-800 text-xs">
+                      Ficha Técnica & Especificaciones Técnicas
+                    </label>
+                    <p className="text-[11px] text-slate-500 font-normal">
+                      Estos datos se muestran en la tabla técnica de la página de cada producto.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddSpec}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Agregar fila</span>
+                  </button>
+                </div>
+
+                {/* Chips de sugerencias rápidas */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[10px] text-slate-400 font-semibold">Atributos comunes:</span>
+                  {['Motor', 'Cuchilla', 'Batería', 'Autonomía', 'Tiempo de Carga', 'Peso', 'Voltaje', 'Accesorios', 'Garantía'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleQuickAddSpec(preset)}
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors"
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Lista interactiva de especificaciones */}
+                {formSpecs.length === 0 ? (
+                  <div className="p-3 text-center border border-dashed border-slate-200 rounded-xl text-slate-400 text-[11px]">
+                    No hay especificaciones cargadas. Usa &quot;Agregar fila&quot; o los atributos comunes para añadir características técnicas.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {formSpecs.map((spec, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Atributo (ej: Motor)"
+                          value={spec.key}
+                          onChange={(e) => handleUpdateSpec(index, 'key', e.target.value)}
+                          className="w-1/3 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold focus:outline-none focus:border-slate-900 bg-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Valor (ej: Rotativo 7.200 RPM)"
+                          value={spec.value}
+                          onChange={(e) => handleUpdateSpec(index, 'value', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-slate-900 bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSpec(index)}
+                          className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors shrink-0"
+                          title="Eliminar especificación"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
 
               {/* Switches */}
               <div className="flex items-center gap-6 pt-1">
@@ -1387,7 +1523,7 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-slate-500">
                     {editingCategory
                       ? `Modificando rubro "${editingCategory.title}"`
-                      : 'Agregá un nuevo rubro para organizar los productos mayoristas'}
+                      : 'Agregá un nuevo rubro para organizar los productos'}
                   </p>
                 </div>
               </div>

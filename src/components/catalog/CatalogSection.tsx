@@ -96,7 +96,7 @@ export function CatalogSection({
             Artículos y Equipamiento
           </span>
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-950">
-            Máquinas & Insumos <span className="text-red-700">Mayoristas</span>
+            Máquinas e Insumos <span className="text-red-700">Profesionales</span>
           </h2>
         </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   X,
   MessageCircle,
@@ -9,6 +10,7 @@ import {
   Minus,
   Check,
   Share2,
+  ArrowRight,
 } from 'lucide-react';
 import { Product } from '@/types';
 import { useQuote } from '@/context/QuoteContext';
@@ -45,7 +47,7 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
   const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
   const cleanNumber = rawNumber.replace(/\D/g, '');
   const singleWhatsAppMessage = encodeURIComponent(
-    `Hola Distribuidora Londress! Quisiera consultar precio mayorista y disponibilidad por: *${product.name}* (Código SKU: ${product.sku}, Formato: ${product.presentation}).`
+    `Hola Distribuidora Londress! Quisiera consultar precio y disponibilidad por: *${product.name}* (Código SKU: ${product.sku}, Presentación: ${product.presentation}).`
   );
   const singleWhatsAppUrl = `https://wa.me/${cleanNumber}?text=${singleWhatsAppMessage}`;
 
@@ -154,7 +156,7 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
                 </div>
 
                 <div className="text-xs text-slate-500 py-1 border-y border-slate-100 flex items-center justify-between">
-                  <span>Presentación mayorista:</span>
+                  <span>Presentación:</span>
                   <strong className="text-slate-900 font-semibold">{product.presentation}</strong>
                 </div>
 
@@ -243,6 +245,15 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
                   <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Consultar directo por WhatsApp</span>
                 </a>
+
+                <Link
+                  href={`/catalogo/${product.slug}`}
+                  onClick={onClose}
+                  className="w-full py-2 px-3 text-[11px] font-bold text-slate-700 hover:text-red-700 flex items-center justify-center gap-1 transition-colors"
+                >
+                  <span>Ver página completa y especificaciones técnicas</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
           </div>

@@ -27,12 +27,12 @@ export function HeroBanner({ settings }: HeroBannerProps) {
 
             {/* Headline */}
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-bold text-slate-950 tracking-tight leading-[1.15]">
-              Insumos de Peluquería, Barbería y{' '}
-              <span className="text-red-700">Máquinas Profesionales</span>
+              Máquinas e Insumos de{' '}
+              <span className="text-red-700">Peluquería y Barbería</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto lg:mx-0 font-normal leading-relaxed">
-              Abastecimiento mayorista para barberos, estilistas y distribuidores. Herramientas de precisión, repuestos originales, cosmética capilar y envíos programados a todo el país.
+              Venta y provisión para salones, barberos y profesionales. Herramientas de precisión, repuestos originales y cosmética capilar especializada.
             </p>
 
             {/* CTAs - Sleek Luxury Contrast */}
@@ -60,18 +60,18 @@ export function HeroBanner({ settings }: HeroBannerProps) {
             <div className="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 border-t border-slate-100 max-w-lg mx-auto lg:mx-0 text-center sm:text-left">
               <div>
                 <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">
-                  Venta Mayorista
+                  Venta Profesional
                 </span>
                 <span className="text-[11px] text-slate-500 mt-0.5 block font-normal">
-                  Por bulto o unidad
+                  Insumos y herramientas
                 </span>
               </div>
               <div>
                 <span className="text-xs font-bold text-slate-900 block uppercase tracking-wider">
-                  Despacho 24/48h
+                  Atención Inmediata
                 </span>
                 <span className="text-[11px] text-slate-500 mt-0.5 block font-normal">
-                  Envíos a todo el país
+                  Consultas por WhatsApp
                 </span>
               </div>
               <div>
@@ -79,7 +79,7 @@ export function HeroBanner({ settings }: HeroBannerProps) {
                   Garantía Oficial
                 </span>
                 <span className="text-[11px] text-slate-500 mt-0.5 block font-normal">
-                  Facturas A y B
+                  Marcas líderes originales
                 </span>
               </div>
             </div>

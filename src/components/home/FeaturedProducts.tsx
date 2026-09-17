@@ -27,7 +27,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
               <span>Alta Demanda en Salones & Barberías</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif font-black text-slate-950">
-              Máquinas & Insumos Destacados
+              Máquinas e Insumos Destacados
             </h2>
           </div>
           <Link

@@ -140,7 +140,7 @@ export function Header() {
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-semibold text-slate-800 hover:text-red-700 py-1"
           >
-            Catálogo de Insumos & Máquinas
+            Catálogo de Máquinas e Insumos
           </Link>
           <Link
             href="/#categorias"

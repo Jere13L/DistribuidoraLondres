@@ -22,13 +22,13 @@ export function OrderingProcess() {
       step: '03',
       title: 'Consultar por WhatsApp',
       description:
-        'Envía el listado con un clic a nuestro equipo de ventas para confirmar stock y precios por volumen.',
+        'Envía el listado con un clic a nuestro equipo de ventas para confirmar disponibilidad y cotización.',
     },
     {
       step: '04',
-      title: 'Despacho & Facturación',
+      title: 'Coordinación Directa',
       description:
-        'Coordinamos el envío directo con Factura A o B oficial y garantía técnica.',
+        'Acordamos los detalles y disponibilidad directamente a través de WhatsApp de forma rápida y personalizada.',
     },
   ];
 
@@ -40,7 +40,7 @@ export function OrderingProcess() {
             Proceso Comercial
           </span>
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-950">
-            ¿Cómo realizar un pedido <span className="text-red-700">mayorista</span>?
+            ¿Cómo realizar <span className="text-red-700">tu pedido</span>?
           </h2>
         </div>
 

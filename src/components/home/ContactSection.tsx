@@ -49,7 +49,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
     // 2. Abrir WhatsApp con el mensaje estructurado
     const rawNumber = settings.whatsapp?.replace(/\D/g, '') || '5491123456789';
     const text = encodeURIComponent(
-      `Hola Distribuidora Londress!\n\n*Consulta Mayorista Insumos de Peluquería/Barbería:*\n• Establecimiento: ${formData.businessName || 'No especificado'}\n• Tipo: ${formData.businessType.toUpperCase()}\n• Contacto: ${formData.contactPerson}\n• Teléfono: ${formData.phone}\n• Localidad: ${formData.city || 'No especificada'}\n\n*Consulta:*\n${formData.message}`
+      `Hola Distribuidora Londress!\n\n*Consulta Máquinas e Insumos de Peluquería/Barbería:*\n• Establecimiento: ${formData.businessName || 'No especificado'}\n• Tipo: ${formData.businessType.toUpperCase()}\n• Contacto: ${formData.contactPerson}\n• Teléfono: ${formData.phone}\n• Localidad: ${formData.city || 'No especificada'}\n\n*Consulta:*\n${formData.message}`
     );
     window.open(`https://wa.me/${rawNumber}?text=${text}`, '_blank');
 
@@ -79,7 +79,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 Contacto & <span className="text-red-700">Depósito</span>
               </h2>
               <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-                Atendemos a salones de belleza, barberías, academias e instituciones. Puedes contactarnos por WhatsApp o visitarnos en nuestro showroom mayorista.
+                Atendemos a salones de belleza, barberías, academias e instituciones. Puedes contactarnos por WhatsApp o visitarnos en nuestro showroom comercial.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 Solicitud de <span className="text-red-700">Presupuesto</span>
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Completa el formulario y te responderemos en el día con la lista de precios mayorista.
+                Completa el formulario y te responderemos en el día con la cotización y disponibilidad.
               </p>
             </div>
 
@@ -181,7 +181,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                     <option value="barberia">Barbería</option>
                     <option value="peluqueria">Peluquería</option>
                     <option value="academia">Academia / Escuela</option>
-                    <option value="distribuidor">Distribuidor Mayorista</option>
+                    <option value="distribuidor">Distribuidor / Revendedor</option>
                   </select>
                 </div>
               </div>
@@ -257,7 +257,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 className="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-black disabled:bg-slate-500 text-white font-medium text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm active:scale-98 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? 'Registrando y abriendo WhatsApp...' : 'Enviar Consulta Mayorista'}</span>
+                <span>{isSubmitting ? 'Registrando y abriendo WhatsApp...' : 'Enviar Consulta por WhatsApp'}</span>
               </button>
 
               {submitted && (

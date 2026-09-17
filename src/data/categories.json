@@ -6,16 +6,16 @@
     "description": "Clippers inalámbricas, trimmers de terminación, shavers de lámina y kits profesionales de marcas líderes.",
     "icon": "Scissors",
     "image": "/uploads/articulos/wahl-senior-cordless.jpeg",
-    "itemCount": 12
+    "itemCount": 15
   },
   {
     "_id": "cat-tijeras",
     "title": "Tijeras, Navajas & Filos",
     "slug": "tijeras-filos-profesionales",
-    "description": "Tijeras de corte microdentadas, filo dulce japonés, navajas de barbero y hojas de afeitar Treet Platinum.",
+    "description": "Tijeras de corte microdentadas, filo dulce japonés, navajas de barbero y hojas de afeitar profesionales.",
     "icon": "Sparkles",
     "image": "/uploads/articulos/treet-platinum-100-pack.jpeg",
-    "itemCount": 4
+    "itemCount": 7
   },
   {
     "_id": "cat-secadores",
@@ -30,9 +30,9 @@
     "_id": "cat-accesorios",
     "title": "Accesorios, Capas & Barbería",
     "slug": "accesorios-capas-barberia",
-    "description": "Capas WMARK, peines de carbono, papel de cuello Luke Paper, rociadores, aerosoles Andis Cool Care y lubricantes.",
+    "description": "Capas WMARK, peines de carbono, papel de cuello, rociadores, aerosoles Andis Cool Care y cosmética barberil.",
     "icon": "Package",
     "image": "/uploads/articulos/capa-wmark-negra.jpeg",
-    "itemCount": 11
+    "itemCount": 15
   }
 ]

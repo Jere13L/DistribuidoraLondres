@@ -34,7 +34,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
               Catálogo Por Rubro
             </span>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-950">
-              Líneas de Distribución Mayorista
+              Líneas de Máquinas e Insumos
             </h2>
           </div>
           <Link
@@ -78,7 +78,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
                   Máquinas de corte profesionales, trimmers de precisión y shavers oficiales con repuestos.
                 </p>
                 <div className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-white group-hover:underline">
-                  <span>Ver artículos mayoristas</span>
+                  <span>Ver artículos disponibles</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>

@@ -39,7 +39,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-xs text-slate-500 max-w-sm leading-relaxed font-normal">
-              Distribución mayorista de máquinas de corte, trimmers, tijeras profesionales y cosmética capilar. Abastecimiento oficial a salones y barberías de todo el país.
+              Venta y provisión de máquinas de corte, trimmers, tijeras profesionales y cosmética capilar. Atención directa a salones y barberías.
             </p>
             <div className="pt-1">
               <Link
@@ -130,7 +130,7 @@ export function Footer() {
         <div className="mt-10 pt-6 border-t border-slate-100 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© {new Date().getFullYear()} Distribuidora Londress. Todos los derechos reservados.</p>
           <p>
-            Catálogo mayorista profesional. Consultas y presupuestos oficiales por WhatsApp.
+            Catálogo profesional de productos. Consultas y presupuestos por WhatsApp.
           </p>
         </div>
       </div>

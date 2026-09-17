@@ -15,7 +15,7 @@ export const siteSettingsType = defineType({
       name: 'slogan',
       title: 'Eslogan / Bajada',
       type: 'string',
-      initialValue: 'Distribución y logística mayorista para comercios e instituciones',
+      initialValue: 'Distribución y provisión de máquinas e insumos para salones y profesionales',
     }),
     defineField({
       name: 'whatsapp',
@@ -53,7 +53,7 @@ export const siteSettingsType = defineType({
       name: 'heroTitle',
       title: 'Título Principal de la Portada',
       type: 'string',
-      initialValue: 'Tu socio estratégico en distribución y abastecimiento mayorista',
+      initialValue: 'Máquinas e Insumos Profesionales de Peluquería y Barbería',
     }),
     defineField({
       name: 'heroSubtitle',

@@ -39,7 +39,7 @@ export default async function HomePage() {
         brands={brands}
       />
 
-      {/* Proceso de Compra Mayorista */}
+      {/* Proceso de Compra */}
       <OrderingProcess />
 
       {/* Nosotros, Ubicación y Formulario de Contacto Directo */}
