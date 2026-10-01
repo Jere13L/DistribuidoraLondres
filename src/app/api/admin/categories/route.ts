@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getCategoriesAsync,
   saveCategoriesAsync,
+  deleteCategoryAsync,
   getProductsAsync,
   saveProductsAsync,
 } from '@/lib/storage';
@@ -110,13 +111,12 @@ export async function DELETE(req: NextRequest) {
 
     const categories = await getCategoriesAsync();
     const target = categories.find((c) => c._id === id);
-    const filtered = categories.filter((c) => c._id !== id);
 
-    if (filtered.length === categories.length) {
+    if (!target) {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
     }
 
-    await saveCategoriesAsync(filtered);
+    await deleteCategoryAsync(id);
 
     // Cascade: clear category from products
     const products = await getProductsAsync();
@@ -131,7 +131,7 @@ export async function DELETE(req: NextRequest) {
       await saveProductsAsync(products);
     }
 
-    return NextResponse.json({ success: true, message: 'Categoría eliminada' });
+    return NextResponse.json({ success: true, message: 'Categoría eliminada permanentemente' });
   } catch (error) {
     console.error('Error in DELETE /api/admin/categories:', error);
     return NextResponse.json({ error: 'Error al eliminar la categoría' }, { status: 500 });

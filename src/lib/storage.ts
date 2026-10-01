@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { Product, Category, Brand, SiteSettings, Inquiry } from '@/types';
 import {
   mockProducts,
@@ -9,6 +10,15 @@ import {
 } from '@/data/mockData';
 import { getSupabase } from './supabase';
 
+// Global in-memory cache to ensure instant reactivity and persistence across warm serverless lambdas
+declare global {
+  var __londress_products: Product[] | undefined;
+  var __londress_categories: Category[] | undefined;
+  var __londress_settings: SiteSettings | undefined;
+  var __londress_brands: Brand[] | undefined;
+  var __londress_inquiries: Inquiry[] | undefined;
+}
+
 const DATA_DIR = path.join(process.cwd(), 'src', 'data');
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const CATEGORIES_FILE = path.join(DATA_DIR, 'categories.json');
@@ -16,159 +26,135 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const BRANDS_FILE = path.join(DATA_DIR, 'brands.json');
 const INQUIRIES_FILE = path.join(DATA_DIR, 'inquiries.json');
 
-function ensureDataFiles() {
+// Writable fallback storage in serverless environments (e.g. Vercel /tmp)
+const TMP_DIR = path.join(os.tmpdir(), 'londress_data');
+const TMP_PRODUCTS_FILE = path.join(TMP_DIR, 'products.json');
+const TMP_CATEGORIES_FILE = path.join(TMP_DIR, 'categories.json');
+const TMP_SETTINGS_FILE = path.join(TMP_DIR, 'settings.json');
+const TMP_BRANDS_FILE = path.join(TMP_DIR, 'brands.json');
+const TMP_INQUIRIES_FILE = path.join(TMP_DIR, 'inquiries.json');
+
+function ensureTmpDir() {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(TMP_DIR)) {
+      fs.mkdirSync(TMP_DIR, { recursive: true });
     }
-
-    if (!fs.existsSync(PRODUCTS_FILE)) {
-      fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(mockProducts, null, 2), 'utf8');
-    }
-
-    if (!fs.existsSync(CATEGORIES_FILE)) {
-      fs.writeFileSync(CATEGORIES_FILE, JSON.stringify(mockCategories, null, 2), 'utf8');
-    }
-
-    if (!fs.existsSync(SETTINGS_FILE)) {
-      fs.writeFileSync(SETTINGS_FILE, JSON.stringify(mockSiteSettings, null, 2), 'utf8');
-    }
-
-    if (!fs.existsSync(BRANDS_FILE)) {
-      fs.writeFileSync(BRANDS_FILE, JSON.stringify(mockBrands, null, 2), 'utf8');
-    }
-
-    if (!fs.existsSync(INQUIRIES_FILE)) {
-      fs.writeFileSync(INQUIRIES_FILE, JSON.stringify([], null, 2), 'utf8');
-    }
-  } catch (e) {
-    // In serverless environments, filesystem may be read-only
-  }
+  } catch {}
 }
 
-// Ensure initial files exist on module load
-try {
-  ensureDataFiles();
-} catch (e) {
-  // Ignored in read-only environments
+function writeSafe(targetFile: string, tmpFile: string, data: any): boolean {
+  const jsonStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  let written = false;
+
+  // 1. Try local project file (works in development or writable disk)
+  try {
+    const dir = path.dirname(targetFile);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(targetFile, jsonStr, 'utf8');
+    written = true;
+  } catch (e) {
+    // In Vercel serverless, filesystem is read-only
+  }
+
+  // 2. Write to /tmp (always writable in Vercel serverless)
+  try {
+    ensureTmpDir();
+    fs.writeFileSync(tmpFile, jsonStr, 'utf8');
+    written = true;
+  } catch (e) {
+    console.warn('Could not write to tmpdir file:', tmpFile, e);
+  }
+
+  return written;
+}
+
+function readSafe<T>(targetFile: string, tmpFile: string, fallback: T): T {
+  // 1. Check if a newer version was saved to /tmp
+  try {
+    if (fs.existsSync(tmpFile)) {
+      const content = fs.readFileSync(tmpFile, 'utf8');
+      return JSON.parse(content);
+    }
+  } catch (e) {}
+
+  // 2. Check bundled file in src/data/
+  try {
+    if (fs.existsSync(targetFile)) {
+      const content = fs.readFileSync(targetFile, 'utf8');
+      return JSON.parse(content);
+    }
+  } catch (e) {}
+
+  return fallback;
 }
 
 /* ========================================================
-   LOCAL STORAGE HELPERS (SYNCHRONOUS FALLBACK)
+   LOCAL STORAGE HELPERS (SYNCHRONOUS FALLBACK + IN-MEMORY)
 ======================================================== */
 
 export function getLocalProducts(): Product[] {
-  try {
-    ensureDataFiles();
-    if (fs.existsSync(PRODUCTS_FILE)) {
-      const content = fs.readFileSync(PRODUCTS_FILE, 'utf8');
-      return JSON.parse(content);
-    }
-    return mockProducts;
-  } catch (error) {
-    console.error('Error reading products.json:', error);
-    return mockProducts;
+  if (globalThis.__londress_products && Array.isArray(globalThis.__londress_products)) {
+    return globalThis.__londress_products;
   }
+  const products = readSafe<Product[]>(PRODUCTS_FILE, TMP_PRODUCTS_FILE, mockProducts);
+  globalThis.__londress_products = products;
+  return products;
 }
 
 export function saveLocalProducts(products: Product[]): boolean {
-  try {
-    ensureDataFiles();
-    fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8');
-    return true;
-  } catch (error) {
-    console.warn('Could not write products.json (may be read-only environment):', error);
-    return false;
-  }
+  globalThis.__londress_products = products;
+  return writeSafe(PRODUCTS_FILE, TMP_PRODUCTS_FILE, products);
 }
 
 export function getLocalCategories(): Category[] {
-  try {
-    ensureDataFiles();
-    if (fs.existsSync(CATEGORIES_FILE)) {
-      const content = fs.readFileSync(CATEGORIES_FILE, 'utf8');
-      return JSON.parse(content);
-    }
-    return mockCategories;
-  } catch (error) {
-    console.error('Error reading categories.json:', error);
-    return mockCategories;
+  if (globalThis.__londress_categories && Array.isArray(globalThis.__londress_categories)) {
+    return globalThis.__londress_categories;
   }
+  const categories = readSafe<Category[]>(CATEGORIES_FILE, TMP_CATEGORIES_FILE, mockCategories);
+  globalThis.__londress_categories = categories;
+  return categories;
 }
 
 export function saveLocalCategories(categories: Category[]): boolean {
-  try {
-    ensureDataFiles();
-    fs.writeFileSync(CATEGORIES_FILE, JSON.stringify(categories, null, 2), 'utf8');
-    return true;
-  } catch (error) {
-    console.warn('Could not write categories.json:', error);
-    return false;
-  }
+  globalThis.__londress_categories = categories;
+  return writeSafe(CATEGORIES_FILE, TMP_CATEGORIES_FILE, categories);
 }
 
 export function getLocalSettings(): SiteSettings {
-  try {
-    ensureDataFiles();
-    if (fs.existsSync(SETTINGS_FILE)) {
-      const content = fs.readFileSync(SETTINGS_FILE, 'utf8');
-      return JSON.parse(content);
-    }
-    return mockSiteSettings;
-  } catch (error) {
-    console.error('Error reading settings.json:', error);
-    return mockSiteSettings;
+  if (globalThis.__londress_settings) {
+    return globalThis.__londress_settings;
   }
+  const settings = readSafe<SiteSettings>(SETTINGS_FILE, TMP_SETTINGS_FILE, mockSiteSettings);
+  globalThis.__londress_settings = settings;
+  return settings;
 }
 
 export function saveLocalSettings(settings: SiteSettings): boolean {
-  try {
-    ensureDataFiles();
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
-    return true;
-  } catch (error) {
-    console.warn('Could not write settings.json:', error);
-    return false;
-  }
+  globalThis.__londress_settings = settings;
+  return writeSafe(SETTINGS_FILE, TMP_SETTINGS_FILE, settings);
 }
 
 export function getLocalBrands(): Brand[] {
-  try {
-    ensureDataFiles();
-    if (fs.existsSync(BRANDS_FILE)) {
-      const content = fs.readFileSync(BRANDS_FILE, 'utf8');
-      return JSON.parse(content);
-    }
-    return mockBrands;
-  } catch (error) {
-    console.error('Error reading brands.json:', error);
-    return mockBrands;
+  if (globalThis.__londress_brands && Array.isArray(globalThis.__londress_brands)) {
+    return globalThis.__londress_brands;
   }
+  const brands = readSafe<Brand[]>(BRANDS_FILE, TMP_BRANDS_FILE, mockBrands);
+  globalThis.__londress_brands = brands;
+  return brands;
 }
 
 export function getLocalInquiries(): Inquiry[] {
-  try {
-    ensureDataFiles();
-    if (fs.existsSync(INQUIRIES_FILE)) {
-      const content = fs.readFileSync(INQUIRIES_FILE, 'utf8');
-      return JSON.parse(content);
-    }
-    return [];
-  } catch (error) {
-    console.error('Error reading inquiries.json:', error);
-    return [];
+  if (globalThis.__londress_inquiries && Array.isArray(globalThis.__londress_inquiries)) {
+    return globalThis.__londress_inquiries;
   }
+  const inquiries = readSafe<Inquiry[]>(INQUIRIES_FILE, TMP_INQUIRIES_FILE, []);
+  globalThis.__londress_inquiries = inquiries;
+  return inquiries;
 }
 
 export function saveLocalInquiries(inquiries: Inquiry[]): boolean {
-  try {
-    ensureDataFiles();
-    fs.writeFileSync(INQUIRIES_FILE, JSON.stringify(inquiries, null, 2), 'utf8');
-    return true;
-  } catch (error) {
-    console.warn('Could not write inquiries.json:', error);
-    return false;
-  }
+  globalThis.__londress_inquiries = inquiries;
+  return writeSafe(INQUIRIES_FILE, TMP_INQUIRIES_FILE, inquiries);
 }
 
 export function addLocalInquiry(
@@ -204,8 +190,7 @@ export function deleteLocalInquiry(id: string): boolean {
 }
 
 /* ========================================================
-   HYBRID SUPABASE + LOCAL ASYNC STORAGE
-   (Automatic fallback to local files when Supabase is not connected)
+   HYBRID SUPABASE + SERVERLESS ASYNC STORAGE
 ======================================================== */
 
 export async function getInquiriesAsync(): Promise<Inquiry[]> {
@@ -244,7 +229,6 @@ export async function addInquiryAsync(
     try {
       const { error } = await supabase.from('inquiries').insert([newInquiry]);
       if (!error) {
-        // Also update local copy for offline cache
         try {
           const local = getLocalInquiries();
           local.unshift(newInquiry);
@@ -258,7 +242,6 @@ export async function addInquiryAsync(
     }
   }
 
-  // Fallback local
   const inquiries = getLocalInquiries();
   inquiries.unshift(newInquiry);
   saveLocalInquiries(inquiries);
@@ -318,6 +301,7 @@ export async function getProductsAsync(): Promise<Product[]> {
     try {
       const { data, error } = await supabase.from('products').select('*');
       if (!error && data && data.length > 0) {
+        globalThis.__londress_products = data as Product[];
         return data as Product[];
       }
     } catch (err) {
@@ -333,7 +317,7 @@ export async function saveProductsAsync(products: Product[]): Promise<boolean> {
     try {
       const { error } = await supabase.from('products').upsert(products, { onConflict: '_id' });
       if (!error) {
-        try { saveLocalProducts(products); } catch {}
+        saveLocalProducts(products);
         return true;
       }
       console.warn('Supabase upsert products error:', error.message);
@@ -344,12 +328,31 @@ export async function saveProductsAsync(products: Product[]): Promise<boolean> {
   return saveLocalProducts(products);
 }
 
+export async function deleteProductAsync(id: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('products').delete().eq('_id', id);
+      if (error) {
+        console.warn('Supabase delete product error:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase delete product exception:', err);
+    }
+  }
+
+  const currentProducts = await getProductsAsync();
+  const filtered = currentProducts.filter((p) => p._id !== id);
+  return saveLocalProducts(filtered);
+}
+
 export async function getCategoriesAsync(): Promise<Category[]> {
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { data, error } = await supabase.from('categories').select('*');
       if (!error && data && data.length > 0) {
+        globalThis.__londress_categories = data as Category[];
         return data as Category[];
       }
     } catch (err) {
@@ -365,7 +368,7 @@ export async function saveCategoriesAsync(categories: Category[]): Promise<boole
     try {
       const { error } = await supabase.from('categories').upsert(categories, { onConflict: '_id' });
       if (!error) {
-        try { saveLocalCategories(categories); } catch {}
+        saveLocalCategories(categories);
         return true;
       }
       console.warn('Supabase upsert categories error:', error.message);
@@ -376,12 +379,31 @@ export async function saveCategoriesAsync(categories: Category[]): Promise<boole
   return saveLocalCategories(categories);
 }
 
+export async function deleteCategoryAsync(id: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('categories').delete().eq('_id', id);
+      if (error) {
+        console.warn('Supabase delete category error:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase delete category exception:', err);
+    }
+  }
+
+  const currentCategories = await getCategoriesAsync();
+  const filtered = currentCategories.filter((c) => c._id !== id);
+  return saveLocalCategories(filtered);
+}
+
 export async function getBrandsAsync(): Promise<Brand[]> {
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { data, error } = await supabase.from('brands').select('*');
       if (!error && data && data.length > 0) {
+        globalThis.__londress_brands = data as Brand[];
         return data as Brand[];
       }
     } catch (err) {
@@ -401,6 +423,7 @@ export async function getSettingsAsync(): Promise<SiteSettings> {
         .eq('id', 'default')
         .single();
       if (!error && data?.data) {
+        globalThis.__londress_settings = data.data as SiteSettings;
         return data.data as SiteSettings;
       }
     } catch (err) {
@@ -418,7 +441,7 @@ export async function saveSettingsAsync(settings: SiteSettings): Promise<boolean
         .from('site_settings')
         .upsert({ id: 'default', data: settings }, { onConflict: 'id' });
       if (!error) {
-        try { saveLocalSettings(settings); } catch {}
+        saveLocalSettings(settings);
         return true;
       }
     } catch (err) {

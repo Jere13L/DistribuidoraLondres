@@ -23,6 +23,9 @@ import {
   ShieldCheck,
   AlertTriangle,
   Inbox,
+  Loader2,
+  Download,
+  Database,
 } from 'lucide-react';
 import { Product, Category, SiteSettings, Inquiry } from '@/types';
 
@@ -49,6 +52,7 @@ export default function AdminDashboardPage() {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Product Form State
   const [formName, setFormName] = useState('');
@@ -320,20 +324,39 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // 8. Eliminar Producto
+  // 8. Eliminar Producto con feedback de estado
   const handleDeleteProduct = async (id: string) => {
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setProducts(products.filter((p) => p._id !== id));
-        notify('Producto eliminado correctamente');
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        setProducts((prev) => prev.filter((p) => p._id !== id));
+        notify('Producto eliminado permanentemente del catálogo');
       } else {
-        notify('No se pudo eliminar', 'error');
+        notify(data.error || 'No se pudo eliminar el producto', 'error');
       }
     } catch {
-      notify('Error de conexión', 'error');
+      notify('Error de red al intentar eliminar el producto', 'error');
     } finally {
+      setIsDeleting(false);
       setDeletingProductId(null);
+    }
+  };
+
+  // 8.0 Exportar catálogo actual en JSON
+  const handleExportProductsJson = () => {
+    try {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(products, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `catalogo-londress-${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      notify('Catálogo exportado exitosamente en formato JSON');
+    } catch {
+      notify('No se pudo exportar el catálogo', 'error');
     }
   };
 
@@ -522,6 +545,15 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={handleExportProductsJson}
+              title="Descargar copia del catálogo en formato JSON"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:text-black transition-colors"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Exportar JSON</span>
+            </button>
+
             <a
               href="/"
               target="_blank"
@@ -1117,6 +1149,25 @@ export default function AdminDashboardPage() {
               Esta información se actualiza automáticamente en el encabezado, pie de página, WhatsApp y sección de contacto.
             </p>
 
+            {/* Estado de Almacenamiento y Persistencia */}
+            <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 text-slate-700 shadow-2xs">
+                <Database className="w-4 h-4 text-slate-700" />
+              </div>
+              <div className="text-xs space-y-1.5 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold text-slate-900">Almacenamiento de Catálogo:</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    Modo Local / Servidor
+                  </span>
+                </div>
+                <p className="text-slate-600 leading-relaxed">
+                  Cualquier producto agregado o eliminado se actualiza de inmediato en el servidor y en memoria.
+                  Para habilitar persistencia ilimitada en la nube ante reinicios de Vercel, puedes vincular un proyecto gratuito de Supabase ingresando las variables <code className="text-slate-800 font-mono bg-white px-1 py-0.5 rounded border border-slate-200">NEXT_PUBLIC_SUPABASE_URL</code> y <code className="text-slate-800 font-mono bg-white px-1 py-0.5 rounded border border-slate-200">SUPABASE_SERVICE_ROLE_KEY</code> en tu panel de Vercel.
+                </p>
+              </div>
+            </div>
+
             <form onSubmit={handleSaveSettings} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1463,35 +1514,60 @@ export default function AdminDashboardPage() {
       )}
 
       {/* MODAL CONFIRMAR ELIMINACIÓN DE PRODUCTO */}
-      {deletingProductId && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-xl text-center space-y-4">
-            <div className="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-base font-bold text-slate-900">¿Eliminar este producto?</h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Esta acción removerá el producto del catálogo permanentemente.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <button
-                onClick={() => setDeletingProductId(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDeleteProduct(deletingProductId)}
-                className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-xs font-bold text-white uppercase tracking-wider"
-              >
-                Sí, Eliminar
-              </button>
+      {deletingProductId && (() => {
+        const prod = products.find((p) => p._id === deletingProductId);
+        return (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-slate-200 max-w-sm w-full p-6 shadow-xl text-center space-y-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-slate-900">¿Eliminar este producto?</h4>
+                <p className="text-xs text-slate-500 mt-1">
+                  Esta acción removerá el producto del catálogo permanentemente.
+                </p>
+              </div>
+
+              {prod && (
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-left flex items-center gap-3">
+                  {prod.images?.[0] && (
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-white border border-slate-200 shrink-0">
+                      <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900 text-xs truncate">{prod.name}</p>
+                    <p className="text-[10px] text-slate-500 font-mono">
+                      {prod.sku} • {prod.category?.title || 'Sin rubro'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setDeletingProductId(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => handleDeleteProduct(deletingProductId)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-xs font-bold text-white uppercase tracking-wider disabled:opacity-50"
+                >
+                  {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{isDeleting ? 'Eliminando...' : 'Sí, Eliminar'}</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* MODAL CREAR / EDITAR CATEGORÍA O RUBRO */}
       {categoryModalOpen && (

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProductsAsync, saveProductsAsync } from '@/lib/storage';
+import { getProductsAsync, saveProductsAsync, deleteProductAsync } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
 import { Product } from '@/types';
 
@@ -107,14 +107,18 @@ export async function DELETE(req: NextRequest) {
     }
 
     const products = await getProductsAsync();
-    const filtered = products.filter((p) => p._id !== id);
+    const exists = products.some((p) => p._id === id);
 
-    if (filtered.length === products.length) {
+    if (!exists) {
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    await saveProductsAsync(filtered);
-    return NextResponse.json({ success: true, message: 'Producto eliminado' });
+    const success = await deleteProductAsync(id);
+    if (!success) {
+      return NextResponse.json({ error: 'No se pudo eliminar el producto del almacenamiento' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Producto eliminado permanentemente' });
   } catch (error) {
     console.error('Error in DELETE /api/admin/products:', error);
     return NextResponse.json(
