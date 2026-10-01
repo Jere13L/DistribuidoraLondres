@@ -70,6 +70,13 @@ CREATE TABLE IF NOT EXISTS site_settings (
   data JSONB NOT NULL
 );
 
+-- GARANTIZAR COLUMNAS IDEMPOTENTES
+ALTER TABLE products ADD COLUMN IF NOT EXISTS "featured" BOOLEAN DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS "inStock" BOOLEAN DEFAULT TRUE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS "isNew" BOOLEAN DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS "specifications" JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS "itemCount" INTEGER DEFAULT 0;
+
 -- HABILITAR ROW LEVEL SECURITY (RLS) Y PERMISOS ABIERTOS
 ALTER TABLE inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -93,6 +100,26 @@ BEGIN
 
   DROP POLICY IF EXISTS "Public access to site_settings" ON site_settings;
   CREATE POLICY "Public access to site_settings" ON site_settings FOR ALL USING (true) WITH CHECK (true);
+END $$;
+
+-- 5.1 STORAGE BUCKET PARA FOTOS DE PRODUCTOS
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('uploads', 'uploads', true) 
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DO $$ 
+BEGIN
+  DROP POLICY IF EXISTS "Public Access to uploads" ON storage.objects;
+  CREATE POLICY "Public Access to uploads" ON storage.objects FOR SELECT USING (bucket_id = 'uploads');
+
+  DROP POLICY IF EXISTS "Public Insert to uploads" ON storage.objects;
+  CREATE POLICY "Public Insert to uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'uploads');
+
+  DROP POLICY IF EXISTS "Public Update to uploads" ON storage.objects;
+  CREATE POLICY "Public Update to uploads" ON storage.objects FOR UPDATE USING (bucket_id = 'uploads');
+
+  DROP POLICY IF EXISTS "Public Delete to uploads" ON storage.objects;
+  CREATE POLICY "Public Delete to uploads" ON storage.objects FOR DELETE USING (bucket_id = 'uploads');
 END $$;
 
 -- 6. CARGA DE CONFIGURACIÓN INICIAL

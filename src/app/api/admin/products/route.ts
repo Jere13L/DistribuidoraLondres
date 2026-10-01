@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getProductsAsync, saveProductsAsync, deleteProductAsync } from '@/lib/storage';
+import { getProductsAsync, upsertProductAsync, deleteProductAsync } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
 import { Product } from '@/types';
 
@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const products = await getProductsAsync();
 
     const newProduct: Product = {
       _id: body._id || `prod-${Date.now()}`,
@@ -44,8 +43,7 @@ export async function POST(req: NextRequest) {
       isNew: body.isNew ?? false,
     };
 
-    products.unshift(newProduct);
-    await saveProductsAsync(products);
+    await upsertProductAsync(newProduct);
 
     return NextResponse.json({ success: true, product: newProduct });
   } catch (error) {
@@ -70,19 +68,15 @@ export async function PUT(req: NextRequest) {
     }
 
     const products = await getProductsAsync();
-    const index = products.findIndex((p) => p._id === updatedProduct._id);
+    const existing = products.find((p) => p._id === updatedProduct._id);
 
-    if (index === -1) {
-      return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
-    }
-
-    products[index] = {
-      ...products[index],
+    const mergedProduct: Product = {
+      ...(existing || {}),
       ...updatedProduct,
     };
 
-    await saveProductsAsync(products);
-    return NextResponse.json({ success: true, product: products[index] });
+    await upsertProductAsync(mergedProduct);
+    return NextResponse.json({ success: true, product: mergedProduct });
   } catch (error) {
     console.error('Error in PUT /api/admin/products:', error);
     return NextResponse.json(

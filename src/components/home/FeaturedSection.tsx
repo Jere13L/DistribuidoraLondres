@@ -14,6 +14,10 @@ export function FeaturedSection({ initialProducts }: FeaturedSectionProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
 
   useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
+
+  useEffect(() => {
     try {
       const sp = localStorage.getItem('londress_admin_products');
       if (sp) {

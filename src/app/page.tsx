@@ -13,7 +13,8 @@ import { OrderingProcess } from '@/components/home/OrderingProcess';
 import { FaqSection } from '@/components/home/FaqSection';
 import { ContactSection } from '@/components/home/ContactSection';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function HomePage() {
   const [products, categories, brands, settings] = await Promise.all([

@@ -43,6 +43,7 @@ export default function AdminDashboardPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
 
   // Search & Filter
   const [search, setSearch] = useState('');
@@ -104,7 +105,7 @@ export default function AdminDashboardPage() {
     checkAuth();
   }, [router]);
 
-  // 2. Cargar Datos con persistencia local
+  // 2. Cargar Datos con prioridad de nube (Supabase) y sincronización local
   const loadAllData = async (forceRemote = false) => {
     setLoading(true);
     try {
@@ -128,11 +129,17 @@ export default function AdminDashboardPage() {
         }
       }
 
+      // Consultar estado de Supabase
+      fetch('/api/admin/status')
+        .then((r) => r.json())
+        .then((d) => setSupabaseConnected(Boolean(d.supabaseConfigured)))
+        .catch(() => {});
+
       const [pRes, cRes, sRes, iRes] = await Promise.all([
-        fetch('/api/admin/products'),
-        fetch('/api/admin/categories'),
-        fetch('/api/admin/settings'),
-        fetch('/api/admin/inquiries'),
+        fetch('/api/admin/products', { cache: 'no-store' }),
+        fetch('/api/admin/categories', { cache: 'no-store' }),
+        fetch('/api/admin/settings', { cache: 'no-store' }),
+        fetch('/api/admin/inquiries', { cache: 'no-store' }),
       ]);
 
       const [pData, cData, sData, iData] = await Promise.all([
@@ -142,10 +149,11 @@ export default function AdminDashboardPage() {
         iRes.ok ? iRes.json().catch(() => []) : [],
       ]);
 
-      const finalProds = localProds !== null && Array.isArray(localProds) ? localProds : (Array.isArray(pData) ? pData : []);
-      const finalCats = localCats !== null && Array.isArray(localCats) ? localCats : (Array.isArray(cData) ? cData : []);
-      const finalSettings = localSettings !== null ? localSettings : sData;
-      const finalInqs = localInqs !== null && Array.isArray(localInqs) ? localInqs : (Array.isArray(iData) ? iData : []);
+      // La API del servidor / Supabase es la fuente primaria
+      const finalProds = pRes.ok && Array.isArray(pData) ? pData : (localProds || []);
+      const finalCats = cRes.ok && Array.isArray(cData) ? cData : (localCats || []);
+      const finalSettings = sRes.ok && sData ? sData : localSettings;
+      const finalInqs = iRes.ok && Array.isArray(iData) ? iData : (localInqs || []);
 
       setProducts(finalProds);
       setCategories(finalCats);
@@ -153,18 +161,10 @@ export default function AdminDashboardPage() {
       setInquiries(finalInqs);
 
       if (typeof window !== 'undefined') {
-        if (localProds === null && pData && Array.isArray(pData) && pData.length > 0) {
-          localStorage.setItem('londress_admin_products', JSON.stringify(pData));
-        }
-        if (localCats === null && cData && Array.isArray(cData) && cData.length > 0) {
-          localStorage.setItem('londress_admin_categories', JSON.stringify(cData));
-        }
-        if (localSettings === null && sData) {
-          localStorage.setItem('londress_admin_settings', JSON.stringify(sData));
-        }
-        if (localInqs === null && iData && Array.isArray(iData) && iData.length > 0) {
-          localStorage.setItem('londress_admin_inquiries', JSON.stringify(iData));
-        }
+        localStorage.setItem('londress_admin_products', JSON.stringify(finalProds));
+        localStorage.setItem('londress_admin_categories', JSON.stringify(finalCats));
+        if (finalSettings) localStorage.setItem('londress_admin_settings', JSON.stringify(finalSettings));
+        localStorage.setItem('londress_admin_inquiries', JSON.stringify(finalInqs));
       }
     } catch (err) {
       console.error('Error cargando datos:', err);
@@ -351,11 +351,22 @@ export default function AdminDashboardPage() {
 
     try {
       const method = editingProduct ? 'PUT' : 'POST';
+      const res = await fetch('/api/admin/products', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al guardar en el servidor');
+      }
+
+      const finalProduct = data.product || payload;
       let updatedList: Product[];
       if (editingProduct) {
-        updatedList = products.map((p) => (p._id === editingProduct._id ? payload : p));
+        updatedList = products.map((p) => (p._id === editingProduct._id ? finalProduct : p));
       } else {
-        updatedList = [payload, ...products];
+        updatedList = [finalProduct, ...products];
       }
 
       setProducts(updatedList);
@@ -363,17 +374,10 @@ export default function AdminDashboardPage() {
         localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
       }
 
-      notify(editingProduct ? 'Producto actualizado correctamente' : 'Producto creado con éxito');
+      notify(editingProduct ? 'Producto actualizado en la base de datos' : 'Producto creado y guardado en la base de datos');
       setProductModalOpen(false);
-
-      // Sincronizar en segundo plano con el servidor
-      fetch('/api/admin/products', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).catch(() => {});
-    } catch {
-      notify('Error al guardar el producto', 'error');
+    } catch (err: any) {
+      notify(err.message || 'Error al guardar el producto', 'error');
     } finally {
       setSaveLoading(false);
     }
@@ -388,15 +392,17 @@ export default function AdminDashboardPage() {
       if (typeof window !== 'undefined') {
         localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
       }
-      notify(`Stock de "${prod.name}" ${updated.inStock ? 'activado' : 'desactivado'}`);
 
-      fetch('/api/admin/products', {
+      const res = await fetch('/api/admin/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated),
-      }).catch(() => {});
+      });
+      if (!res.ok) throw new Error('Error al sincronizar stock');
+
+      notify(`Stock de "${prod.name}" ${updated.inStock ? 'activado' : 'desactivado'}`);
     } catch {
-      notify('Error al cambiar stock', 'error');
+      notify('Error al cambiar stock en la base de datos', 'error');
     }
   };
 
@@ -409,13 +415,15 @@ export default function AdminDashboardPage() {
       if (typeof window !== 'undefined') {
         localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
       }
-      notify(`"${prod.name}" ${updated.featured ? 'marcado como destacado en portada ⭐' : 'quitado de portada'}`);
 
-      fetch('/api/admin/products', {
+      const res = await fetch('/api/admin/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated),
-      }).catch(() => {});
+      });
+      if (!res.ok) throw new Error('Error al sincronizar destacado');
+
+      notify(`"${prod.name}" ${updated.featured ? 'marcado como destacado en portada ⭐' : 'quitado de portada'}`);
     } catch {
       notify('Error al actualizar estado destacado', 'error');
     }
@@ -425,16 +433,20 @@ export default function AdminDashboardPage() {
   const handleDeleteProduct = async (id: string) => {
     setIsDeleting(true);
     try {
+      const res = await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al eliminar');
+      }
+
       const updatedList = products.filter((p) => p._id !== id);
       setProducts(updatedList);
       if (typeof window !== 'undefined') {
         localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
       }
-      notify('Producto eliminado permanentemente del catálogo');
-
-      fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' }).catch(() => {});
-    } catch {
-      notify('Error al intentar eliminar el producto', 'error');
+      notify('Producto eliminado permanentemente');
+    } catch (err: any) {
+      notify(err.message || 'Error al intentar eliminar el producto', 'error');
     } finally {
       setIsDeleting(false);
       setDeletingProductId(null);
@@ -530,11 +542,20 @@ export default function AdminDashboardPage() {
 
     try {
       const method = editingCategory ? 'PUT' : 'POST';
+      const res = await fetch('/api/admin/categories', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar categoría');
+
+      const savedCat = data.category || payload;
       let updatedList: Category[];
       if (editingCategory) {
-        updatedList = categories.map((c) => (c._id === editingCategory._id ? payload : c));
+        updatedList = categories.map((c) => (c._id === editingCategory._id ? savedCat : c));
       } else {
-        updatedList = [...categories, payload];
+        updatedList = [...categories, savedCat];
       }
 
       setCategories(updatedList);
@@ -542,17 +563,10 @@ export default function AdminDashboardPage() {
         localStorage.setItem('londress_admin_categories', JSON.stringify(updatedList));
       }
 
-      notify(editingCategory ? 'Categoría actualizada correctamente' : 'Categoría creada con éxito');
+      notify(editingCategory ? 'Categoría actualizada en la base de datos' : 'Categoría creada con éxito');
       setCategoryModalOpen(false);
-
-      // Sincronizar en segundo plano con la API
-      fetch('/api/admin/categories', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }).catch(() => {});
-    } catch {
-      notify('Error al procesar la categoría', 'error');
+    } catch (err: any) {
+      notify(err.message || 'Error al procesar la categoría', 'error');
     } finally {
       setSaveCatLoading(false);
     }
@@ -561,16 +575,17 @@ export default function AdminDashboardPage() {
   // 8.4 Eliminar Categoría
   const handleDeleteCategory = async (id: string) => {
     try {
+      const res = await fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar categoría del servidor');
+
       const updatedList = categories.filter((c) => c._id !== id);
       setCategories(updatedList);
       if (typeof window !== 'undefined') {
         localStorage.setItem('londress_admin_categories', JSON.stringify(updatedList));
       }
-      notify('Categoría eliminada del panel');
-
-      fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' }).catch(() => {});
-    } catch {
-      notify('Error al eliminar categoría', 'error');
+      notify('Categoría eliminada de la base de datos');
+    } catch (err: any) {
+      notify(err.message || 'Error al eliminar categoría', 'error');
     } finally {
       setDeletingCategoryId(null);
     }
@@ -583,18 +598,22 @@ export default function AdminDashboardPage() {
     setSaveLoading(true);
 
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('londress_admin_settings', JSON.stringify(settings));
-      }
-      notify('Configuración comercial guardada correctamente');
-
-      fetch('/api/admin/settings', {
+      const res = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
-      }).catch(() => {});
-    } catch {
-      notify('Error al guardar configuración', 'error');
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar en el servidor');
+
+      const saved = data.settings || settings;
+      setSettings(saved);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_settings', JSON.stringify(saved));
+      }
+      notify('Configuración comercial guardada en la base de datos');
+    } catch (err: any) {
+      notify(err.message || 'Error al guardar configuración', 'error');
     } finally {
       setSaveLoading(false);
     }
@@ -667,9 +686,25 @@ export default function AdminDashboardPage() {
               <span className="font-serif text-sm sm:text-base font-bold text-slate-900 block leading-tight">
                 DISTRIBUIDORA <span className="text-red-700">LONDRESS</span>
               </span>
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">
-                Panel de Administración
-              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">
+                  Panel de Control
+                </span>
+                {supabaseConnected ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Supabase Conectado
+                  </span>
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
+                    title="Conecta las credenciales de Supabase para activar persistencia en la nube"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Modo Local
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

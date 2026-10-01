@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getCategoriesAsync,
-  saveCategoriesAsync,
+  upsertCategoryAsync,
   deleteCategoryAsync,
   getProductsAsync,
+  upsertProductAsync,
   saveProductsAsync,
 } from '@/lib/storage';
 import { isAuthenticated } from '@/lib/auth';
@@ -22,7 +23,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const categories = await getCategoriesAsync();
 
     const newCategory: Category = {
       _id: body._id || `cat-${Date.now()}`,
@@ -39,8 +39,7 @@ export async function POST(req: NextRequest) {
       itemCount: 0,
     };
 
-    categories.push(newCategory);
-    await saveCategoriesAsync(categories);
+    await upsertCategoryAsync(newCategory);
 
     return NextResponse.json({ success: true, category: newCategory });
   } catch (error) {
@@ -65,30 +64,26 @@ export async function PUT(req: NextRequest) {
     }
 
     const prevCategory = categories[index];
-    categories[index] = { ...categories[index], ...updated };
-    await saveCategoriesAsync(categories);
+    const mergedCategory = { ...prevCategory, ...updated };
+    await upsertCategoryAsync(mergedCategory);
 
     // Cascading updates to products
     const products = await getProductsAsync();
-    let changed = false;
-    products.forEach((p) => {
+    for (const p of products) {
       if (p.category?._id === updated._id || (prevCategory && p.category?.slug === prevCategory.slug)) {
         p.category = {
           ...p.category,
-          _id: categories[index]._id,
-          title: categories[index].title,
-          slug: categories[index].slug,
-          description: categories[index].description,
-          image: categories[index].image,
+          _id: mergedCategory._id,
+          title: mergedCategory.title,
+          slug: mergedCategory.slug,
+          description: mergedCategory.description,
+          image: mergedCategory.image,
         };
-        changed = true;
+        await upsertProductAsync(p);
       }
-    });
-    if (changed) {
-      await saveProductsAsync(products);
     }
 
-    return NextResponse.json({ success: true, category: categories[index] });
+    return NextResponse.json({ success: true, category: mergedCategory });
   } catch (error) {
     console.error('Error in PUT /api/admin/categories:', error);
     return NextResponse.json({ error: 'Error al actualizar la categoría' }, { status: 500 });

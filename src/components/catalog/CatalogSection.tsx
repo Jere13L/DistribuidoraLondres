@@ -31,6 +31,14 @@ export function CatalogSection({
   const [currentCategories, setCurrentCategories] = useState<Category[]>(categories);
 
   React.useEffect(() => {
+    setCurrentProducts(products);
+  }, [products]);
+
+  React.useEffect(() => {
+    setCurrentCategories(categories);
+  }, [categories]);
+
+  React.useEffect(() => {
     try {
       const sp = localStorage.getItem('londress_admin_products');
       if (sp) {

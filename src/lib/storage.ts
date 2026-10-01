@@ -300,9 +300,21 @@ export async function getProductsAsync(): Promise<Product[]> {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('products').select('*');
-      if (!error && data && data.length > 0) {
-        globalThis.__londress_products = data as Product[];
-        return data as Product[];
+      if (!error && data) {
+        if (data.length > 0) {
+          globalThis.__londress_products = data as Product[];
+          return data as Product[];
+        }
+        // Tabla existe pero está vacía: auto-sembrar los 37 productos oficiales
+        const initial = getLocalProducts();
+        if (initial.length > 0) {
+          await supabase.from('products').upsert(initial, { onConflict: '_id' });
+          globalThis.__londress_products = initial;
+          return initial;
+        }
+      }
+      if (error) {
+        console.warn('Supabase products fetch exception, using local:', error.message);
       }
     } catch (err) {
       console.warn('Supabase products fetch exception, using local:', err);
@@ -311,12 +323,38 @@ export async function getProductsAsync(): Promise<Product[]> {
   return getLocalProducts();
 }
 
+export async function upsertProductAsync(product: Product): Promise<boolean> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('products').upsert(product, { onConflict: '_id' });
+      if (error) {
+        console.warn('Supabase upsert single product error:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase upsert single product exception:', err);
+    }
+  }
+
+  const current = getLocalProducts();
+  const index = current.findIndex((p) => p._id === product._id);
+  if (index >= 0) {
+    current[index] = product;
+  } else {
+    current.unshift(product);
+  }
+  globalThis.__londress_products = current;
+  saveLocalProducts(current);
+  return true;
+}
+
 export async function saveProductsAsync(products: Product[]): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { error } = await supabase.from('products').upsert(products, { onConflict: '_id' });
       if (!error) {
+        globalThis.__londress_products = products;
         saveLocalProducts(products);
         return true;
       }
@@ -325,6 +363,7 @@ export async function saveProductsAsync(products: Product[]): Promise<boolean> {
       console.warn('Supabase upsert products exception:', err);
     }
   }
+  globalThis.__londress_products = products;
   return saveLocalProducts(products);
 }
 
@@ -341,9 +380,11 @@ export async function deleteProductAsync(id: string): Promise<boolean> {
     }
   }
 
-  const currentProducts = await getProductsAsync();
-  const filtered = currentProducts.filter((p) => p._id !== id);
-  return saveLocalProducts(filtered);
+  const current = getLocalProducts();
+  const filtered = current.filter((p) => p._id !== id);
+  globalThis.__londress_products = filtered;
+  saveLocalProducts(filtered);
+  return true;
 }
 
 export async function getCategoriesAsync(): Promise<Category[]> {
@@ -351,9 +392,20 @@ export async function getCategoriesAsync(): Promise<Category[]> {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('categories').select('*');
-      if (!error && data && data.length > 0) {
-        globalThis.__londress_categories = data as Category[];
-        return data as Category[];
+      if (!error && data) {
+        if (data.length > 0) {
+          globalThis.__londress_categories = data as Category[];
+          return data as Category[];
+        }
+        const initial = getLocalCategories();
+        if (initial.length > 0) {
+          await supabase.from('categories').upsert(initial, { onConflict: '_id' });
+          globalThis.__londress_categories = initial;
+          return initial;
+        }
+      }
+      if (error) {
+        console.warn('Supabase categories fetch exception, using local:', error.message);
       }
     } catch (err) {
       console.warn('Supabase categories fetch exception, using local:', err);
@@ -362,12 +414,38 @@ export async function getCategoriesAsync(): Promise<Category[]> {
   return getLocalCategories();
 }
 
+export async function upsertCategoryAsync(category: Category): Promise<boolean> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { error } = await supabase.from('categories').upsert(category, { onConflict: '_id' });
+      if (error) {
+        console.warn('Supabase upsert category error:', error.message);
+      }
+    } catch (err) {
+      console.warn('Supabase upsert category exception:', err);
+    }
+  }
+
+  const current = getLocalCategories();
+  const index = current.findIndex((c) => c._id === category._id);
+  if (index >= 0) {
+    current[index] = category;
+  } else {
+    current.push(category);
+  }
+  globalThis.__londress_categories = current;
+  saveLocalCategories(current);
+  return true;
+}
+
 export async function saveCategoriesAsync(categories: Category[]): Promise<boolean> {
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { error } = await supabase.from('categories').upsert(categories, { onConflict: '_id' });
       if (!error) {
+        globalThis.__londress_categories = categories;
         saveLocalCategories(categories);
         return true;
       }
@@ -376,6 +454,7 @@ export async function saveCategoriesAsync(categories: Category[]): Promise<boole
       console.warn('Supabase upsert categories exception:', err);
     }
   }
+  globalThis.__londress_categories = categories;
   return saveLocalCategories(categories);
 }
 
@@ -392,9 +471,11 @@ export async function deleteCategoryAsync(id: string): Promise<boolean> {
     }
   }
 
-  const currentCategories = await getCategoriesAsync();
-  const filtered = currentCategories.filter((c) => c._id !== id);
-  return saveLocalCategories(filtered);
+  const current = getLocalCategories();
+  const filtered = current.filter((c) => c._id !== id);
+  globalThis.__londress_categories = filtered;
+  saveLocalCategories(filtered);
+  return true;
 }
 
 export async function getBrandsAsync(): Promise<Brand[]> {
@@ -426,6 +507,12 @@ export async function getSettingsAsync(): Promise<SiteSettings> {
         globalThis.__londress_settings = data.data as SiteSettings;
         return data.data as SiteSettings;
       }
+      if (error && error.code === 'PGRST116') {
+        const initial = getLocalSettings();
+        await supabase.from('site_settings').upsert({ id: 'default', data: initial });
+        globalThis.__londress_settings = initial;
+        return initial;
+      }
     } catch (err) {
       console.warn('Supabase settings fetch exception, using local:', err);
     }
@@ -441,6 +528,7 @@ export async function saveSettingsAsync(settings: SiteSettings): Promise<boolean
         .from('site_settings')
         .upsert({ id: 'default', data: settings }, { onConflict: 'id' });
       if (!error) {
+        globalThis.__londress_settings = settings;
         saveLocalSettings(settings);
         return true;
       }
@@ -448,5 +536,6 @@ export async function saveSettingsAsync(settings: SiteSettings): Promise<boolean
       console.warn('Supabase save settings exception:', err);
     }
   }
+  globalThis.__londress_settings = settings;
   return saveLocalSettings(settings);
 }
