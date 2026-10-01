@@ -27,6 +27,8 @@ import {
   Download,
   Database,
   RotateCcw,
+  Star,
+  Sparkles,
 } from 'lucide-react';
 import { Product, Category, SiteSettings, Inquiry } from '@/types';
 
@@ -66,6 +68,7 @@ export default function AdminDashboardPage() {
   const [formImages, setFormImages] = useState<string[]>(['']);
   const [formInStock, setFormInStock] = useState(true);
   const [formIsNew, setFormIsNew] = useState(false);
+  const [formFeatured, setFormFeatured] = useState(false);
   const [formSpecs, setFormSpecs] = useState<{ key: string; value: string }[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -233,6 +236,7 @@ export default function AdminDashboardPage() {
       setFormImages(prod.images && prod.images.length > 0 ? prod.images : ['']);
       setFormInStock(prod.inStock);
       setFormIsNew(prod.isNew || false);
+      setFormFeatured(prod.featured || false);
       setFormSpecs(prod.specifications && prod.specifications.length > 0 ? prod.specifications.map((s) => ({ ...s })) : []);
     } else {
       setEditingProduct(null);
@@ -246,6 +250,7 @@ export default function AdminDashboardPage() {
       setFormImages(['']);
       setFormInStock(true);
       setFormIsNew(false);
+      setFormFeatured(false);
       setFormSpecs([]);
     }
     setProductModalOpen(true);
@@ -340,6 +345,7 @@ export default function AdminDashboardPage() {
       images: formImages.filter((img) => img.trim() !== ''),
       inStock: formInStock,
       isNew: formIsNew,
+      featured: formFeatured,
       specifications: formSpecs.filter((s) => s.key.trim() !== '' && s.value.trim() !== ''),
     };
 
@@ -391,6 +397,27 @@ export default function AdminDashboardPage() {
       }).catch(() => {});
     } catch {
       notify('Error al cambiar stock', 'error');
+    }
+  };
+
+  // 7.1 Toggle rápido de Destacado en la portada
+  const handleToggleFeatured = async (prod: Product) => {
+    try {
+      const updated = { ...prod, featured: !prod.featured };
+      const updatedList = products.map((p) => (p._id === prod._id ? updated : p));
+      setProducts(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
+      }
+      notify(`"${prod.name}" ${updated.featured ? 'marcado como destacado en portada ⭐' : 'quitado de portada'}`);
+
+      fetch('/api/admin/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      }).catch(() => {});
+    } catch {
+      notify('Error al actualizar estado destacado', 'error');
     }
   };
 
@@ -862,6 +889,7 @@ export default function AdminDashboardPage() {
                       <th className="py-3.5 px-4">Categoría</th>
                       <th className="py-3.5 px-4">Presentación</th>
                       <th className="py-3.5 px-4 text-center">Stock</th>
+                      <th className="py-3.5 px-4 text-center">Portada ⭐</th>
                       <th className="py-3.5 px-4 text-right">Acciones</th>
                     </tr>
                   </thead>
@@ -921,6 +949,21 @@ export default function AdminDashboardPage() {
                               }`}
                             />
                             <span>{p.inStock ? 'En Stock' : 'Sin Stock'}</span>
+                          </button>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFeatured(p)}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider transition-colors ${
+                              p.featured
+                                ? 'bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100'
+                                : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                            }`}
+                            title={p.featured ? 'Quitar de portada' : 'Destacar en portada'}
+                          >
+                            <Star className={`w-3 h-3 ${p.featured ? 'fill-amber-400 text-amber-500' : 'text-slate-400'}`} />
+                            <span>{p.featured ? 'Destacado' : 'Normal'}</span>
                           </button>
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -1339,6 +1382,39 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
+              {/* Barra de Anuncios Superior */}
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Barra Superior de Avisos / Novedades</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={settings.announcementActive !== false}
+                      onChange={(e) =>
+                        setSettings({ ...settings, announcementActive: e.target.checked })
+                      }
+                      className="rounded text-slate-900 focus:ring-0 w-4 h-4"
+                    />
+                    <span>Mostrar en la web</span>
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Ej: Distribución Oficial de Máquinas e Insumos • Atención Directa a Salones y Barberías al 2216733172"
+                  value={settings.announcementText || ''}
+                  onChange={(e) =>
+                    setSettings({ ...settings, announcementText: e.target.value })
+                  }
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-slate-900"
+                />
+                <span className="text-[10px] text-slate-400 block">
+                  Mensaje destacado en la barra oscura superior de la página principal.
+                </span>
+              </div>
+
               <button
                 type="submit"
                 disabled={saveLoading}
@@ -1579,7 +1655,7 @@ export default function AdminDashboardPage() {
 
 
               {/* Switches */}
-              <div className="flex items-center gap-6 pt-1">
+              <div className="flex flex-wrap items-center gap-6 pt-1">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1587,7 +1663,7 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setFormInStock(e.target.checked)}
                     className="rounded text-slate-900 focus:ring-0 w-4 h-4"
                   />
-                  <span className="font-bold text-slate-800">Stock Disponible Inmediato</span>
+                  <span className="font-bold text-slate-800">Stock Disponible</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -1598,6 +1674,19 @@ export default function AdminDashboardPage() {
                     className="rounded text-red-700 focus:ring-0 w-4 h-4"
                   />
                   <span className="font-bold text-slate-800">Marcar como &quot;Novedad&quot;</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formFeatured}
+                    onChange={(e) => setFormFeatured(e.target.checked)}
+                    className="rounded text-amber-600 focus:ring-0 w-4 h-4"
+                  />
+                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
+                    <span>Destacado en Portada</span>
+                  </span>
                 </label>
               </div>
 

@@ -7,8 +7,10 @@ import {
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { CategoryShowcase } from '@/components/home/CategoryShowcase';
 import { BrandStrip } from '@/components/home/BrandStrip';
+import { FeaturedSection } from '@/components/home/FeaturedSection';
 import { CatalogSection } from '@/components/catalog/CatalogSection';
 import { OrderingProcess } from '@/components/home/OrderingProcess';
+import { FaqSection } from '@/components/home/FaqSection';
 import { ContactSection } from '@/components/home/ContactSection';
 
 export const revalidate = 60;
@@ -32,6 +34,9 @@ export default async function HomePage() {
       {/* Tira de Marcas Oficiales Distribuidas */}
       <BrandStrip brands={brands} />
 
+      {/* Artículos y Herramientas Estrella Destacadas */}
+      <FeaturedSection initialProducts={products} />
+
       {/* Catálogo Interactivo con Búsqueda y Filtros en Tiempo Real */}
       <CatalogSection
         products={products}
@@ -41,6 +46,9 @@ export default async function HomePage() {
 
       {/* Proceso de Compra */}
       <OrderingProcess />
+
+      {/* Preguntas Frecuentes Comerciales */}
+      <FaqSection />
 
       {/* Nosotros, Ubicación y Formulario de Contacto Directo */}
       <ContactSection settings={settings} />

@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { QuoteProvider } from '@/context/QuoteContext';
 import { Header } from '@/components/layout/Header';
+import { TopAnnouncementBar } from '@/components/layout/TopAnnouncementBar';
 import { Footer } from '@/components/layout/Footer';
 import { QuoteDrawer } from '@/components/quote/QuoteDrawer';
 import { FloatingWhatsAppButton } from '@/components/common/FloatingWhatsAppButton';
@@ -104,6 +105,7 @@ export default function RootLayout({
         style={{ colorScheme: 'light', backgroundColor: '#ffffff' }}
       >
         <QuoteProvider>
+          <TopAnnouncementBar />
           <Header />
           <main className="flex-1 bg-white">{children}</main>
           <Footer />

@@ -167,11 +167,18 @@ export function ProductCard({
             {product.sku}
           </span>
 
-          {product.isNew && (
-            <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-red-700 text-white shadow-2xs">
-              Novedad
-            </span>
-          )}
+          <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
+            {product.featured && (
+              <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-amber-500 text-white shadow-2xs">
+                Destacado
+              </span>
+            )}
+            {product.isNew && (
+              <span className="px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-red-700 text-white shadow-2xs">
+                Novedad
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Info */}

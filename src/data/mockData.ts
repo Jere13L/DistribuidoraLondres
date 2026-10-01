@@ -10,7 +10,9 @@ export const mockSiteSettings: SiteSettings = {
   "schedule": "Lunes a Viernes de 08:30 a 18:00 hs | Sábados de 09:00 a 13:00 hs",
   "heroTitle": "Máquinas e Insumos de Peluquería y Barbería",
   "heroSubtitle": "Provisión integral para salones de belleza, barberías, academias y profesionales. Herramientas de precisión, repuestos originales y cosmética capilar especializada.",
-  "heroBadge": "Distribuidor Oficial Barber & Hair Salon"
+  "heroBadge": "Distribuidor Oficial Barber & Hair Salon",
+  "announcementText": "Distribución Oficial de Máquinas e Insumos • Atención Directa a Salones y Barberías al 2216733172",
+  "announcementActive": true
 };
 
 export const mockCategories: Category[] = [

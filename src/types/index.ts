@@ -57,6 +57,8 @@ export interface SiteSettings {
   heroTitle: string;
   heroSubtitle: string;
   heroBadge: string;
+  announcementText?: string;
+  announcementActive?: boolean;
 }
 
 export interface Inquiry {
