@@ -75,7 +75,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       slogan: 'Venta y distribución de máquinas e insumos de peluquería y barbería',
       whatsapp: '5492216733172',
       phone: '+54 9 221 673-3172',
-      email: 'ventas@distribuidoralondress.com',
+      email: 'Londressdistri@gmail.com',
       city: 'Buenos Aires, Argentina',
       schedule: 'Lunes a Viernes de 08:30 a 18:00 hs',
       heroTitle: 'Máquinas e Insumos de Peluquería y Barbería',

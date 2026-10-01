@@ -101,7 +101,12 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>ventas@distribuidoralondress.com</span>
+                <a
+                  href="mailto:Londressdistri@gmail.com"
+                  className="hover:text-red-700 transition-colors"
+                >
+                  Londressdistri@gmail.com
+                </a>
               </li>
               <li className="flex items-start gap-2">
                 <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />

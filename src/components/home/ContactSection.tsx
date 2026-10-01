@@ -109,7 +109,12 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 </div>
                 <div>
                   <strong className="text-slate-900 block font-bold">Email</strong>
-                  <span>{settings.email}</span>
+                  <a
+                    href={`mailto:${settings.email}`}
+                    className="hover:text-red-700 transition-colors"
+                  >
+                    {settings.email}
+                  </a>
                 </div>
               </div>
 
