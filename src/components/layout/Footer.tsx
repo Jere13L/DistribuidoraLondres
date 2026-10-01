@@ -7,7 +7,6 @@ import {
   Phone,
   Mail,
   Clock,
-  ExternalLink,
 } from 'lucide-react';
 import categoriesData from '@/data/categories.json';
 
@@ -40,15 +39,6 @@ export function Footer() {
             <p className="text-xs text-slate-500 max-w-sm leading-relaxed font-normal">
               Venta y provisión de máquinas de corte, trimmers, tijeras profesionales y cosmética capilar. Atención directa a salones y barberías.
             </p>
-            <div className="pt-1">
-              <Link
-                href="/admin"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-red-700 font-semibold transition-colors"
-              >
-                <span>Panel de Administración</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
-            </div>
           </div>
 
           {/* Categories */}
