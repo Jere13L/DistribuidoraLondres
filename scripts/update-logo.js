@@ -4,13 +4,60 @@ const path = require('path');
 
 const inputPath = 'C:/Users/Jeremias Lanza/.gemini/antigravity/brain/ee8ec433-a1a0-48b8-b27b-4435b87ef484/.user_uploaded/media_1790812824412.jpg';
 
-// Helper to create a valid Windows .ico file containing PNG data
-function createIco(pngBuffers) {
-  // pngBuffers: array of { width, height, buffer }
-  const count = pngBuffers.length;
+// Helper to create a 100% standard Windows BMP-encoded ICO file (universally recognized by all browsers and Windows)
+async function createStandardBmpIco(sizes, pngBuffer) {
+  const count = sizes.length;
   const headerSize = 6;
   const dirEntrySize = 16;
   let offset = headerSize + count * dirEntrySize;
+
+  const images = [];
+  for (const s of sizes) {
+    const raw = await sharp(pngBuffer).resize(s, s).ensureAlpha().raw().toBuffer();
+    const maskRowStride = Math.ceil(s / 32) * 4;
+    const andMaskSize = maskRowStride * s;
+    const xorSize = s * s * 4;
+    const bihSize = 40;
+    const totalImgSize = bihSize + xorSize + andMaskSize;
+
+    const bih = Buffer.alloc(bihSize);
+    bih.writeUInt32LE(bihSize, 0);
+    bih.writeInt32LE(s, 4);
+    bih.writeInt32LE(s * 2, 8); // height * 2 as per ICO spec
+    bih.writeUInt16LE(1, 12); // planes = 1
+    bih.writeUInt16LE(32, 14); // 32 bpp
+    bih.writeUInt32LE(0, 16); // BI_RGB
+    bih.writeUInt32LE(xorSize + andMaskSize, 20); // biSizeImage
+
+    const xorData = Buffer.alloc(xorSize);
+    const andMask = Buffer.alloc(andMaskSize, 0);
+
+    for (let y = 0; y < s; y++) {
+      const srcY = s - 1 - y; // bottom-up bitmap order
+      for (let x = 0; x < s; x++) {
+        const srcIdx = (srcY * s + x) * 4;
+        const dstIdx = (y * s + x) * 4;
+        const r = raw[srcIdx];
+        const g = raw[srcIdx + 1];
+        const b = raw[srcIdx + 2];
+        const a = raw[srcIdx + 3];
+        // BGRA format
+        xorData[dstIdx] = b;
+        xorData[dstIdx + 1] = g;
+        xorData[dstIdx + 2] = r;
+        xorData[dstIdx + 3] = a;
+        if (a < 128) {
+          const byteIdx = y * maskRowStride + Math.floor(x / 8);
+          const bitIdx = 7 - (x % 8);
+          andMask[byteIdx] |= (1 << bitIdx);
+        }
+      }
+    }
+
+    const imgBuffer = Buffer.concat([bih, xorData, andMask]);
+    images.push({ width: s, height: s, size: totalImgSize, buffer: imgBuffer, offset });
+    offset += totalImgSize;
+  }
 
   const header = Buffer.alloc(headerSize);
   header.writeUInt16LE(0, 0); // reserved
@@ -18,28 +65,27 @@ function createIco(pngBuffers) {
   header.writeUInt16LE(count, 4); // count of images
 
   const dirEntries = [];
-  for (const img of pngBuffers) {
+  for (const img of images) {
     const entry = Buffer.alloc(dirEntrySize);
     entry.writeUInt8(img.width >= 256 ? 0 : img.width, 0);
     entry.writeUInt8(img.height >= 256 ? 0 : img.height, 1);
-    entry.writeUInt8(0, 2); // color palette (0 = no palette)
+    entry.writeUInt8(0, 2); // no palette
     entry.writeUInt8(0, 3); // reserved
     entry.writeUInt16LE(1, 4); // color planes
-    entry.writeUInt16LE(32, 6); // bits per pixel
-    entry.writeUInt32LE(img.buffer.length, 8); // size of image data
-    entry.writeUInt32LE(offset, 12); // offset of image data
-    offset += img.buffer.length;
+    entry.writeUInt16LE(32, 6); // 32 bpp
+    entry.writeUInt32LE(img.size, 8); // size of image data
+    entry.writeUInt32LE(img.offset, 12); // offset
     dirEntries.push(entry);
   }
 
-  return Buffer.concat([header, ...dirEntries, ...pngBuffers.map(img => img.buffer)]);
+  return Buffer.concat([header, ...dirEntries, ...images.map(img => img.buffer)]);
 }
 
-async function run() {
-  console.log('Generating official Londress logos and favicons from uploaded image...');
-  
+async function main() {
+  console.log('Generating official Londress favicons and logo assets...');
+
   if (!fs.existsSync(inputPath)) {
-    throw new Error('Input image not found at ' + inputPath);
+    throw new Error('Input image not found: ' + inputPath);
   }
 
   // 1. High-Res Circular Transparent PNG (512x512)
@@ -65,7 +111,7 @@ async function run() {
     .jpeg({ quality: 95 })
     .toBuffer();
 
-  // Save to public/images/
+  // Write base logo files
   fs.writeFileSync(path.join('public', 'images', 'logo.jpg'), logoJpg512);
   fs.writeFileSync(path.join('public', 'images', 'logo-transparent.png'), logoTransparent512);
   console.log('Wrote public/images/logo.jpg and public/images/logo-transparent.png');
@@ -76,14 +122,16 @@ async function run() {
     .png()
     .toBuffer();
   fs.writeFileSync(path.join('src', 'app', 'apple-icon.png'), appleIcon180);
-  console.log('Wrote src/app/apple-icon.png');
+  fs.writeFileSync(path.join('public', 'apple-icon.png'), appleIcon180);
+  console.log('Wrote apple-icon.png (180x180)');
 
-  // 4. Standard App Icons
+  // 4. PNG Favicons: 96x96, 32x32, 16x16
   const icon96 = await sharp(logoTransparent512)
     .resize(96, 96)
     .png()
     .toBuffer();
   fs.writeFileSync(path.join('src', 'app', 'icon.png'), icon96);
+  fs.writeFileSync(path.join('public', 'icon.png'), icon96);
 
   const icon32 = await sharp(logoTransparent512)
     .resize(32, 32)
@@ -96,37 +144,30 @@ async function run() {
     .png()
     .toBuffer();
   fs.writeFileSync(path.join('public', 'favicon-16x16.png'), icon16);
-  console.log('Wrote favicon-16x16, favicon-32x32, icon.png');
+  console.log('Wrote PNG icons: 96x96, 32x32, 16x16');
 
-  // 5. Multi-size ICO
-  const icon48 = await sharp(logoTransparent512)
-    .resize(48, 48)
-    .png()
-    .toBuffer();
+  // 5. Standard BMP-encoded ICO (16x16, 32x32, 48x48)
+  const validIcoBuffer = await createStandardBmpIco([16, 32, 48], logoTransparent512);
+  fs.writeFileSync(path.join('public', 'favicon.ico'), validIcoBuffer);
+  fs.writeFileSync(path.join('src', 'app', 'favicon.ico'), validIcoBuffer);
+  console.log('Wrote valid standard BMP ICO: public/favicon.ico and src/app/favicon.ico (size:', validIcoBuffer.length, 'bytes)');
 
-  const icoBuffer = createIco([
-    { width: 16, height: 16, buffer: icon16 },
-    { width: 32, height: 32, buffer: icon32 },
-    { width: 48, height: 48, buffer: icon48 },
-  ]);
+  // 6. Remove broken icon.svg files (which Chrome refuses to render as tab favicons)
+  const appSvg = path.join('src', 'app', 'icon.svg');
+  if (fs.existsSync(appSvg)) {
+    fs.unlinkSync(appSvg);
+    console.log('Removed src/app/icon.svg to prevent browser SVG raster blocking');
+  }
+  const publicSvg = path.join('public', 'icon.svg');
+  if (fs.existsSync(publicSvg)) {
+    fs.unlinkSync(publicSvg);
+    console.log('Removed public/icon.svg to prevent browser SVG raster blocking');
+  }
 
-  fs.writeFileSync(path.join('public', 'favicon.ico'), icoBuffer);
-  fs.writeFileSync(path.join('src', 'app', 'favicon.ico'), icoBuffer);
-  console.log('Wrote public/favicon.ico and src/app/favicon.ico');
-
-  // 6. SVG wrapper icon for modern browsers that request /icon.svg
-  const base64Png = logoTransparent512.toString('base64');
-  const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <image href="data:image/png;base64,${base64Png}" x="0" y="0" width="512" height="512"/>
-</svg>`;
-  fs.writeFileSync(path.join('public', 'icon.svg'), svgContent, 'utf8');
-  fs.writeFileSync(path.join('src', 'app', 'icon.svg'), svgContent, 'utf8');
-  console.log('Wrote public/icon.svg and src/app/icon.svg');
-
-  console.log('All logo and favicon assets successfully generated and replaced!');
+  console.log('All favicon and logo assets updated successfully!');
 }
 
-run().catch(err => {
+main().catch(err => {
   console.error(err);
   process.exit(1);
 });
