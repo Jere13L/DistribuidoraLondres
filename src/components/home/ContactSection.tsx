@@ -17,6 +17,20 @@ interface ContactSectionProps {
 }
 
 export function ContactSection({ settings }: ContactSectionProps) {
+  const [currentSettings, setCurrentSettings] = useState<SiteSettings>(settings);
+
+  React.useEffect(() => {
+    try {
+      const ss = localStorage.getItem('londress_admin_settings');
+      if (ss) {
+        const parsed = JSON.parse(ss);
+        if (parsed && typeof parsed === 'object') {
+          setCurrentSettings(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
   const [formData, setFormData] = useState({
     businessName: '',
     contactPerson: '',
@@ -33,12 +47,24 @@ export function ContactSection({ settings }: ContactSectionProps) {
     setIsSubmitting(true);
 
     try {
-      // 1. Guardar en base de datos local
-      await fetch('/api/contact', {
+      // 1. Guardar en base de datos local y sincronizar
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.inquiry && typeof window !== 'undefined') {
+          try {
+            const si = localStorage.getItem('londress_admin_inquiries');
+            const inqs = si ? JSON.parse(si) : [];
+            inqs.unshift(data.inquiry);
+            localStorage.setItem('londress_admin_inquiries', JSON.stringify(inqs));
+          } catch {}
+        }
+      }
     } catch (err) {
       console.error('Error al guardar consulta:', err);
     } finally {
@@ -46,7 +72,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
     }
 
     // 2. Abrir WhatsApp con el mensaje estructurado
-    const rawNumber = settings.whatsapp?.replace(/\D/g, '') || '5492216733172';
+    const rawNumber = currentSettings.whatsapp?.replace(/\D/g, '') || '5492216733172';
     const text = encodeURIComponent(
       `Hola Distribuidora Londress!\n\n*Consulta Máquinas e Insumos de Peluquería/Barbería:*\n• Establecimiento: ${formData.businessName || 'No especificado'}\n• Tipo: ${formData.businessType.toUpperCase()}\n• Contacto: ${formData.contactPerson}\n• Teléfono: ${formData.phone}\n• Localidad: ${formData.city || 'No especificada'}\n\n*Consulta:*\n${formData.message}`
     );
@@ -89,7 +115,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 </div>
                 <div>
                   <strong className="text-slate-900 block font-bold">WhatsApp Ventas</strong>
-                  <span className="text-slate-900 font-semibold">{settings.whatsapp}</span>
+                  <span className="text-slate-900 font-semibold">{currentSettings.whatsapp}</span>
                 </div>
               </div>
 
@@ -99,7 +125,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 </div>
                 <div>
                   <strong className="text-slate-900 block font-bold">Teléfono</strong>
-                  <span>{settings.phone}</span>
+                  <span>{currentSettings.phone}</span>
                 </div>
               </div>
 
@@ -110,10 +136,10 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 <div>
                   <strong className="text-slate-900 block font-bold">Email</strong>
                   <a
-                    href={`mailto:${settings.email}`}
+                    href={`mailto:${currentSettings.email}`}
                     className="hover:text-red-700 transition-colors"
                   >
-                    {settings.email}
+                    {currentSettings.email}
                   </a>
                 </div>
               </div>
@@ -124,7 +150,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 </div>
                 <div>
                   <strong className="text-slate-900 block font-bold">Horario</strong>
-                  <span>{settings.schedule}</span>
+                  <span>{currentSettings.schedule}</span>
                 </div>
               </div>
             </div>

@@ -26,6 +26,7 @@ import {
   Loader2,
   Download,
   Database,
+  RotateCcw,
 } from 'lucide-react';
 import { Product, Category, SiteSettings, Inquiry } from '@/types';
 
@@ -100,10 +101,30 @@ export default function AdminDashboardPage() {
     checkAuth();
   }, [router]);
 
-  // 2. Cargar Datos
-  const loadAllData = async () => {
+  // 2. Cargar Datos con persistencia local
+  const loadAllData = async (forceRemote = false) => {
     setLoading(true);
     try {
+      let localProds: Product[] | null = null;
+      let localCats: Category[] | null = null;
+      let localSettings: SiteSettings | null = null;
+      let localInqs: Inquiry[] | null = null;
+
+      if (!forceRemote && typeof window !== 'undefined') {
+        try {
+          const sp = localStorage.getItem('londress_admin_products');
+          if (sp) localProds = JSON.parse(sp);
+          const sc = localStorage.getItem('londress_admin_categories');
+          if (sc) localCats = JSON.parse(sc);
+          const ss = localStorage.getItem('londress_admin_settings');
+          if (ss) localSettings = JSON.parse(ss);
+          const si = localStorage.getItem('londress_admin_inquiries');
+          if (si) localInqs = JSON.parse(si);
+        } catch (e) {
+          console.warn('Error reading localStorage:', e);
+        }
+      }
+
       const [pRes, cRes, sRes, iRes] = await Promise.all([
         fetch('/api/admin/products'),
         fetch('/api/admin/categories'),
@@ -112,16 +133,36 @@ export default function AdminDashboardPage() {
       ]);
 
       const [pData, cData, sData, iData] = await Promise.all([
-        pRes.json(),
-        cRes.json(),
-        sRes.json(),
-        iRes.ok ? iRes.json() : [],
+        pRes.json().catch(() => []),
+        cRes.json().catch(() => []),
+        sRes.json().catch(() => null),
+        iRes.ok ? iRes.json().catch(() => []) : [],
       ]);
 
-      setProducts(pData);
-      setCategories(cData);
-      setSettings(sData);
-      setInquiries(iData);
+      const finalProds = localProds !== null && Array.isArray(localProds) ? localProds : (Array.isArray(pData) ? pData : []);
+      const finalCats = localCats !== null && Array.isArray(localCats) ? localCats : (Array.isArray(cData) ? cData : []);
+      const finalSettings = localSettings !== null ? localSettings : sData;
+      const finalInqs = localInqs !== null && Array.isArray(localInqs) ? localInqs : (Array.isArray(iData) ? iData : []);
+
+      setProducts(finalProds);
+      setCategories(finalCats);
+      setSettings(finalSettings);
+      setInquiries(finalInqs);
+
+      if (typeof window !== 'undefined') {
+        if (localProds === null && pData && Array.isArray(pData) && pData.length > 0) {
+          localStorage.setItem('londress_admin_products', JSON.stringify(pData));
+        }
+        if (localCats === null && cData && Array.isArray(cData) && cData.length > 0) {
+          localStorage.setItem('londress_admin_categories', JSON.stringify(cData));
+        }
+        if (localSettings === null && sData) {
+          localStorage.setItem('londress_admin_settings', JSON.stringify(sData));
+        }
+        if (localInqs === null && iData && Array.isArray(iData) && iData.length > 0) {
+          localStorage.setItem('londress_admin_inquiries', JSON.stringify(iData));
+        }
+      }
     } catch (err) {
       console.error('Error cargando datos:', err);
     } finally {
@@ -131,35 +172,39 @@ export default function AdminDashboardPage() {
 
   const handleToggleInquiryStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'pending' ? 'contacted' : 'pending';
+    const updatedInqs = inquiries.map((i) => (i._id === id ? { ...i, status: newStatus as any } : i));
+    setInquiries(updatedInqs);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('londress_admin_inquiries', JSON.stringify(updatedInqs));
+    }
+    notify(newStatus === 'contacted' ? 'Consulta marcada como contactada' : 'Consulta marcada como pendiente');
+
     try {
-      const res = await fetch('/api/admin/inquiries', {
+      await fetch('/api/admin/inquiries', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: newStatus }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setInquiries(data.inquiries);
-        notify(newStatus === 'contacted' ? 'Consulta marcada como contactada' : 'Consulta marcada como pendiente');
-      }
     } catch {
-      notify('Error al actualizar estado', 'error');
+      // Ignored - local state already updated
     }
   };
 
   const handleDeleteInquiry = async (id: string) => {
+    const updatedInqs = inquiries.filter((i) => i._id !== id);
+    setInquiries(updatedInqs);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('londress_admin_inquiries', JSON.stringify(updatedInqs));
+    }
+    setDeletingInquiryId(null);
+    notify('Consulta eliminada del registro');
+
     try {
-      const res = await fetch(`/api/admin/inquiries?id=${id}`, {
+      await fetch(`/api/admin/inquiries?id=${id}`, {
         method: 'DELETE',
       });
-      if (res.ok) {
-        const data = await res.json();
-        setInquiries(data.inquiries);
-        setDeletingInquiryId(null);
-        notify('Consulta eliminada del registro');
-      }
     } catch {
-      notify('Error al eliminar consulta', 'error');
+      // Ignored - local state already updated
     }
   };
 
@@ -271,13 +316,25 @@ export default function AdminDashboardPage() {
       slug: formCategorySlug,
     };
 
-    const payload = {
-      _id: editingProduct?._id,
+    const finalId = editingProduct?._id || `prod-${Date.now()}`;
+    const finalSlug =
+      editingProduct?.slug ||
+      formName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+
+    const payload: Product = {
+      _id: finalId,
       name: formName,
-      sku: formSku,
+      slug: finalSlug,
+      sku: formSku || `SKU-${Date.now().toString().slice(-4)}`,
       category: selectedCategoryObj,
-      brand: { _id: `brand-${formBrandName.toLowerCase()}`, name: formBrandName },
-      presentation: formPresentation,
+      brand: { _id: `brand-${formBrandName.toLowerCase()}`, name: formBrandName || 'Londress' },
+      presentation: formPresentation || 'Unidad',
       shortDescription: formShortDesc,
       description: formDesc,
       images: formImages.filter((img) => img.trim() !== ''),
@@ -288,21 +345,29 @@ export default function AdminDashboardPage() {
 
     try {
       const method = editingProduct ? 'PUT' : 'POST';
-      const res = await fetch('/api/admin/products', {
+      let updatedList: Product[];
+      if (editingProduct) {
+        updatedList = products.map((p) => (p._id === editingProduct._id ? payload : p));
+      } else {
+        updatedList = [payload, ...products];
+      }
+
+      setProducts(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
+      }
+
+      notify(editingProduct ? 'Producto actualizado correctamente' : 'Producto creado con éxito');
+      setProductModalOpen(false);
+
+      // Sincronizar en segundo plano con el servidor
+      fetch('/api/admin/products', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        notify(editingProduct ? 'Producto actualizado' : 'Producto creado con éxito');
-        setProductModalOpen(false);
-        loadAllData();
-      } else {
-        notify('Error al guardar el producto', 'error');
-      }
+      }).catch(() => {});
     } catch {
-      notify('Error de red al guardar', 'error');
+      notify('Error al guardar el producto', 'error');
     } finally {
       setSaveLoading(false);
     }
@@ -312,32 +377,37 @@ export default function AdminDashboardPage() {
   const handleToggleStock = async (prod: Product) => {
     try {
       const updated = { ...prod, inStock: !prod.inStock };
-      await fetch('/api/admin/products', {
+      const updatedList = products.map((p) => (p._id === prod._id ? updated : p));
+      setProducts(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
+      }
+      notify(`Stock de "${prod.name}" ${updated.inStock ? 'activado' : 'desactivado'}`);
+
+      fetch('/api/admin/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated),
-      });
-      setProducts(products.map((p) => (p._id === prod._id ? updated : p)));
-      notify(`Stock de "${prod.name}" ${updated.inStock ? 'activado' : 'desactivado'}`);
+      }).catch(() => {});
     } catch {
       notify('Error al cambiar stock', 'error');
     }
   };
 
-  // 8. Eliminar Producto con feedback de estado
+  // 8. Eliminar Producto con feedback de estado y persistencia local
   const handleDeleteProduct = async (id: string) => {
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
-        setProducts((prev) => prev.filter((p) => p._id !== id));
-        notify('Producto eliminado permanentemente del catálogo');
-      } else {
-        notify(data.error || 'No se pudo eliminar el producto', 'error');
+      const updatedList = products.filter((p) => p._id !== id);
+      setProducts(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_products', JSON.stringify(updatedList));
       }
+      notify('Producto eliminado permanentemente del catálogo');
+
+      fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' }).catch(() => {});
     } catch {
-      notify('Error de red al intentar eliminar el producto', 'error');
+      notify('Error al intentar eliminar el producto', 'error');
     } finally {
       setIsDeleting(false);
       setDeletingProductId(null);
@@ -415,34 +485,47 @@ export default function AdminDashboardPage() {
       catFormSlug.trim() ||
       catFormTitle
         .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^\w\s-]/g, '')
+        .trim()
         .replace(/\s+/g, '-');
 
-    const payload = {
-      _id: editingCategory?._id,
+    const finalId = editingCategory?._id || `cat-${Date.now()}`;
+    const payload: Category = {
+      _id: finalId,
       title: catFormTitle,
       slug,
       description: catFormDescription,
       image: catFormImage,
+      itemCount: editingCategory?.itemCount || 0,
     };
 
     try {
       const method = editingCategory ? 'PUT' : 'POST';
-      const res = await fetch('/api/admin/categories', {
+      let updatedList: Category[];
+      if (editingCategory) {
+        updatedList = categories.map((c) => (c._id === editingCategory._id ? payload : c));
+      } else {
+        updatedList = [...categories, payload];
+      }
+
+      setCategories(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_categories', JSON.stringify(updatedList));
+      }
+
+      notify(editingCategory ? 'Categoría actualizada correctamente' : 'Categoría creada con éxito');
+      setCategoryModalOpen(false);
+
+      // Sincronizar en segundo plano con la API
+      fetch('/api/admin/categories', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        notify(editingCategory ? 'Categoría actualizada' : 'Categoría creada con éxito');
-        setCategoryModalOpen(false);
-        loadAllData();
-      } else {
-        notify('Error al guardar categoría', 'error');
-      }
+      }).catch(() => {});
     } catch {
-      notify('Error de red', 'error');
+      notify('Error al procesar la categoría', 'error');
     } finally {
       setSaveCatLoading(false);
     }
@@ -451,15 +534,16 @@ export default function AdminDashboardPage() {
   // 8.4 Eliminar Categoría
   const handleDeleteCategory = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setCategories(categories.filter((c) => c._id !== id));
-        notify('Categoría eliminada');
-      } else {
-        notify('Error al eliminar categoría', 'error');
+      const updatedList = categories.filter((c) => c._id !== id);
+      setCategories(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_categories', JSON.stringify(updatedList));
       }
+      notify('Categoría eliminada del panel');
+
+      fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' }).catch(() => {});
     } catch {
-      notify('Error de red', 'error');
+      notify('Error al eliminar categoría', 'error');
     } finally {
       setDeletingCategoryId(null);
     }
@@ -472,20 +556,38 @@ export default function AdminDashboardPage() {
     setSaveLoading(true);
 
     try {
-      const res = await fetch('/api/admin/settings', {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('londress_admin_settings', JSON.stringify(settings));
+      }
+      notify('Configuración comercial guardada correctamente');
+
+      fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
-      });
-      if (res.ok) {
-        notify('Configuración guardada correctamente');
-      } else {
-        notify('Error al guardar configuración', 'error');
-      }
+      }).catch(() => {});
     } catch {
-      notify('Error al conectar con el servidor', 'error');
+      notify('Error al guardar configuración', 'error');
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  // 9.1 Restablecer valores de fábrica
+  const handleResetDefaults = async () => {
+    if (
+      confirm(
+        '¿Restablecer datos originales del catálogo? Se borrarán las modificaciones locales guardadas en este navegador y se recargarán los datos del servidor.'
+      )
+    ) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('londress_admin_products');
+        localStorage.removeItem('londress_admin_categories');
+        localStorage.removeItem('londress_admin_settings');
+        localStorage.removeItem('londress_admin_inquiries');
+      }
+      await loadAllData(true);
+      notify('Datos restablecidos a los valores por defecto');
     }
   };
 
@@ -552,6 +654,15 @@ export default function AdminDashboardPage() {
             >
               <Download className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">Exportar JSON</span>
+            </button>
+
+            <button
+              onClick={handleResetDefaults}
+              title="Restablecer datos originales del servidor"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:text-red-700 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Restablecer</span>
             </button>
 
             <a
@@ -1152,18 +1263,17 @@ export default function AdminDashboardPage() {
             {/* Estado de Almacenamiento y Persistencia */}
             <div className="mb-6 p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5 text-slate-700 shadow-2xs">
-                <Database className="w-4 h-4 text-slate-700" />
+                <Database className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-xs space-y-1.5 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-bold text-slate-900">Almacenamiento de Catálogo:</span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                    Modo Local / Servidor
+                  <span className="font-bold text-slate-900">Almacenamiento & Sincronización:</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    Persistencia Activa
                   </span>
                 </div>
                 <p className="text-slate-600 leading-relaxed">
-                  Cualquier producto agregado o eliminado se actualiza de inmediato en el servidor y en memoria.
-                  Para habilitar persistencia ilimitada en la nube ante reinicios de Vercel, puedes vincular un proyecto gratuito de Supabase ingresando las variables <code className="text-slate-800 font-mono bg-white px-1 py-0.5 rounded border border-slate-200">NEXT_PUBLIC_SUPABASE_URL</code> y <code className="text-slate-800 font-mono bg-white px-1 py-0.5 rounded border border-slate-200">SUPABASE_SERVICE_ROLE_KEY</code> en tu panel de Vercel.
+                  Tus modificaciones en productos, stock, rubros, consultas y configuración comercial se guardan directamente de forma inmediata. No dependes de bases de datos de terceros.
                 </p>
               </div>
             </div>

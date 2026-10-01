@@ -11,7 +11,21 @@ interface HeroBannerProps {
 }
 
 export function HeroBanner({ settings }: HeroBannerProps) {
-  const rawNumber = settings.whatsapp?.replace(/\D/g, '') || '5491123456789';
+  const [currentSettings, setCurrentSettings] = React.useState<SiteSettings>(settings);
+
+  React.useEffect(() => {
+    try {
+      const ss = localStorage.getItem('londress_admin_settings');
+      if (ss) {
+        const parsed = JSON.parse(ss);
+        if (parsed && typeof parsed === 'object') {
+          setCurrentSettings(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
+  const rawNumber = currentSettings.whatsapp?.replace(/\D/g, '') || '5492216733172';
 
   return (
     <section className="bg-white text-slate-900 pt-10 pb-14 sm:pt-16 sm:pb-20 border-b border-slate-100">

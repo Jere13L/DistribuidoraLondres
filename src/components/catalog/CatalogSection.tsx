@@ -27,6 +27,28 @@ export function CatalogSection({
   brands,
   initialCategory,
 }: CatalogSectionProps) {
+  const [currentProducts, setCurrentProducts] = useState<Product[]>(products);
+  const [currentCategories, setCurrentCategories] = useState<Category[]>(categories);
+
+  React.useEffect(() => {
+    try {
+      const sp = localStorage.getItem('londress_admin_products');
+      if (sp) {
+        const parsed = JSON.parse(sp);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCurrentProducts(parsed);
+        }
+      }
+      const sc = localStorage.getItem('londress_admin_categories');
+      if (sc) {
+        const parsedCats = JSON.parse(sc);
+        if (Array.isArray(parsedCats) && parsedCats.length > 0) {
+          setCurrentCategories(parsedCats);
+        }
+      }
+    } catch {}
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     initialCategory || 'all'
@@ -38,7 +60,7 @@ export function CatalogSection({
 
   // Filtrado computado de productos
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    return currentProducts.filter((product) => {
       // Filtro de búsqueda por texto o SKU
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -72,7 +94,7 @@ export function CatalogSection({
 
       return true;
     });
-  }, [products, searchQuery, selectedCategory, selectedBrand, onlyInStock]);
+  }, [currentProducts, searchQuery, selectedCategory, selectedBrand, onlyInStock]);
 
   const hasActiveFilters =
     searchQuery.trim() !== '' ||
@@ -203,11 +225,11 @@ export function CatalogSection({
                   : 'text-slate-600 hover:text-black hover:bg-slate-50'
               }`}
             >
-              Todos ({products.length})
+              Todos ({currentProducts.length})
             </button>
 
-            {categories.map((cat) => {
-              const count = products.filter(
+            {currentCategories.map((cat) => {
+              const count = currentProducts.filter(
                 (p) => p.category?.slug === cat.slug
               ).length;
               const isSelected = selectedCategory === cat.slug;
@@ -240,7 +262,7 @@ export function CatalogSection({
           {/* Status info */}
           <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
             <span>
-              <strong className="text-slate-900 font-bold">{filteredProducts.length}</strong> de {products.length} productos
+              <strong className="text-slate-900 font-bold">{filteredProducts.length}</strong> de {currentProducts.length} productos
             </span>
 
             {hasActiveFilters && (

@@ -11,18 +11,32 @@ interface CategoryShowcaseProps {
 }
 
 export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
+  const [currentCategories, setCurrentCategories] = React.useState<Category[]>(categories);
+
+  React.useEffect(() => {
+    try {
+      const sc = localStorage.getItem('londress_admin_categories');
+      if (sc) {
+        const parsed = JSON.parse(sc);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCurrentCategories(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
   const mainCategory =
-    categories.find((c) => c.slug === 'maquinas-corte-trimmers') ||
-    categories[0];
+    currentCategories.find((c) => c.slug === 'maquinas-corte-trimmers') ||
+    currentCategories[0];
   const catTijeras =
-    categories.find((c) => c.slug === 'tijeras-filos-profesionales') ||
-    categories[1];
+    currentCategories.find((c) => c.slug === 'tijeras-filos-profesionales') ||
+    currentCategories[1];
   const catAccesorios =
-    categories.find((c) => c.slug === 'accesorios-capas-barberia') ||
-    categories[2];
+    currentCategories.find((c) => c.slug === 'accesorios-capas-barberia') ||
+    currentCategories[2];
   const catSecadores =
-    categories.find((c) => c.slug === 'secadores-herramientas-termicas') ||
-    categories[3];
+    currentCategories.find((c) => c.slug === 'secadores-herramientas-termicas') ||
+    currentCategories[3];
 
   return (
     <section id="categorias" className="py-16 sm:py-20 bg-white border-b border-slate-100">
