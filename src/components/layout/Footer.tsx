@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
   Phone,
   Mail,
@@ -11,6 +12,37 @@ import {
 import categoriesData from '@/data/categories.json';
 
 export function Footer() {
+  const pathname = usePathname();
+  const [categories, setCategories] = React.useState(categoriesData);
+  const [contactPhone, setContactPhone] = React.useState('+54 9 221 673-3172');
+  const [contactEmail, setContactEmail] = React.useState('Londressdistri@gmail.com');
+  const [contactSchedule, setContactSchedule] = React.useState('Lun a Vie 08:30 a 18:00');
+
+  React.useEffect(() => {
+    try {
+      const sc = localStorage.getItem('londress_admin_categories');
+      if (sc) {
+        const parsed = JSON.parse(sc);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCategories(parsed);
+        }
+      }
+      const ss = localStorage.getItem('londress_admin_settings');
+      if (ss) {
+        const parsedSettings = JSON.parse(ss);
+        if (parsedSettings) {
+          if (parsedSettings.phone) setContactPhone(parsedSettings.phone);
+          if (parsedSettings.email) setContactEmail(parsedSettings.email);
+          if (parsedSettings.schedule) setContactSchedule(parsedSettings.schedule);
+        }
+      }
+    } catch {}
+  }, []);
+
+  if (pathname?.startsWith('/studio') || pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="bg-white text-slate-600 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -47,7 +79,7 @@ export function Footer() {
               Rubros
             </h3>
             <ul className="space-y-2 text-xs">
-              {categoriesData.map((cat) => (
+              {categories.map((cat) => (
                 <li key={cat._id}>
                   <Link
                     href={`/#catalogo?cat=${cat.slug}`}
@@ -97,20 +129,20 @@ export function Footer() {
             <ul className="space-y-2.5 text-xs text-slate-500">
               <li className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>+54 9 221 673-3172</span>
+                <span>{contactPhone}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <a
-                  href="mailto:Londressdistri@gmail.com"
+                  href={`mailto:${contactEmail}`}
                   className="hover:text-red-700 transition-colors"
                 >
-                  Londressdistri@gmail.com
+                  {contactEmail}
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                <span>Lun a Vie 08:30 a 18:00</span>
+                <span>{contactSchedule}</span>
               </li>
             </ul>
           </div>

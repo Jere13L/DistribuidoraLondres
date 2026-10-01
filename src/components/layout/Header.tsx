@@ -17,12 +17,23 @@ export function Header() {
   const { totalItems, setIsDrawerOpen } = useQuote();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  if (pathname?.startsWith('/studio')) {
+  if (pathname?.startsWith('/studio') || pathname?.startsWith('/admin')) {
     return null;
   }
 
-  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5492216733172';
-  const cleanNumber = rawNumber.replace(/\D/g, '');
+  const [cleanNumber, setCleanNumber] = useState('5492216733172');
+
+  React.useEffect(() => {
+    try {
+      const ss = localStorage.getItem('londress_admin_settings');
+      if (ss) {
+        const parsed = JSON.parse(ss);
+        if (parsed?.whatsapp) {
+          setCleanNumber(parsed.whatsapp.replace(/\D/g, ''));
+        }
+      }
+    } catch {}
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-100 transition-all">

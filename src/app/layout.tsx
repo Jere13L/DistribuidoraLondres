@@ -78,6 +78,26 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="96x96" href="/icon.png?v=20261001" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png?v=20261001" />
         <link rel="shortcut icon" href="/favicon.ico?v=20261001" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WholesaleStore',
+              name: 'Distribuidora Londress',
+              description: 'Venta y distribución de máquinas e insumos de peluquería, barbería y equipamiento profesional',
+              telephone: '+54 9 221 673-3172',
+              email: 'Londressdistri@gmail.com',
+              image: '/images/logo.jpg',
+              priceRange: '$$',
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Buenos Aires',
+                addressCountry: 'AR',
+              },
+            }),
+          }}
+        />
       </head>
       <body
         className="min-h-full flex flex-col bg-white text-slate-900 font-sans selection:bg-slate-900 selection:text-white overflow-x-hidden"

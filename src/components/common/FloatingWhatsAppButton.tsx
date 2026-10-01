@@ -7,8 +7,8 @@ import { usePathname } from 'next/navigation';
 export function FloatingWhatsAppButton() {
   const pathname = usePathname();
 
-  // No mostrar en la ruta /studio
-  if (pathname?.startsWith('/studio')) return null;
+  // No mostrar en /studio ni en /admin
+  if (pathname?.startsWith('/studio') || pathname?.startsWith('/admin')) return null;
 
   const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5492216733172';
   const cleanNumber = rawNumber.replace(/\D/g, '');

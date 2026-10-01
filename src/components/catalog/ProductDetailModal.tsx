@@ -38,7 +38,7 @@ export function ProductDetailModal({ product, onClose }: ProductDetailModalProps
   };
 
   const handleShare = () => {
-    const url = `${window.location.origin}/#catalogo?prod=${product.slug}`;
+    const url = `${window.location.origin}/catalogo/${product.slug}`;
     navigator.clipboard.writeText(url);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2500);
