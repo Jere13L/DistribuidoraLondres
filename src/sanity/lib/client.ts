@@ -73,8 +73,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     return {
       companyName: 'Distribuidora Londress',
       slogan: 'Venta y distribución de máquinas e insumos de peluquería y barbería',
-      whatsapp: '5491123456789',
-      phone: '+54 11 4567-8900',
+      whatsapp: '5492216733172',
+      phone: '+54 9 221 673-3172',
       email: 'ventas@distribuidoralondress.com',
       city: 'Buenos Aires, Argentina',
       schedule: 'Lunes a Viernes de 08:30 a 18:00 hs',

@@ -21,7 +21,7 @@ export function Header() {
     return null;
   }
 
-  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
+  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5492216733172';
   const cleanNumber = rawNumber.replace(/\D/g, '');
 
   return (
@@ -161,7 +161,7 @@ export function Header() {
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-semibold text-slate-800 hover:text-red-700 py-1"
           >
-            Contacto & Depósito
+            Contacto & Atención Directa
           </Link>
           <div className="pt-2 border-t border-slate-100">
             <a

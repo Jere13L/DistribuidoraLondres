@@ -33,7 +33,7 @@ export function ProductDetailActions({ product }: ProductDetailActionsProps) {
     setIsDrawerOpen(true);
   };
 
-  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
+  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5492216733172';
   const cleanNumber = rawNumber.replace(/\D/g, '');
   const singleWhatsAppMessage = encodeURIComponent(
     `Hola Distribuidora Londress! Quisiera consultar precio y stock por: *${product.name}* (Código SKU: ${product.sku}, Cantidad: ${quantity} unidades, Presentación: ${product.presentation}).`

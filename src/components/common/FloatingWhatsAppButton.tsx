@@ -10,7 +10,7 @@ export function FloatingWhatsAppButton() {
   // No mostrar en la ruta /studio
   if (pathname?.startsWith('/studio')) return null;
 
-  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
+  const rawNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5492216733172';
   const cleanNumber = rawNumber.replace(/\D/g, '');
   const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(
     'Hola Distribuidora Londress! Quisiera hacer una consulta comercial sobre su catálogo de productos.'

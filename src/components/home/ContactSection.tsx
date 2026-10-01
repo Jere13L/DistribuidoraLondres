@@ -46,7 +46,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
     }
 
     // 2. Abrir WhatsApp con el mensaje estructurado
-    const rawNumber = settings.whatsapp?.replace(/\D/g, '') || '5491123456789';
+    const rawNumber = settings.whatsapp?.replace(/\D/g, '') || '5492216733172';
     const text = encodeURIComponent(
       `Hola Distribuidora Londress!\n\n*Consulta Máquinas e Insumos de Peluquería/Barbería:*\n• Establecimiento: ${formData.businessName || 'No especificado'}\n• Tipo: ${formData.businessType.toUpperCase()}\n• Contacto: ${formData.contactPerson}\n• Teléfono: ${formData.phone}\n• Localidad: ${formData.city || 'No especificada'}\n\n*Consulta:*\n${formData.message}`
     );

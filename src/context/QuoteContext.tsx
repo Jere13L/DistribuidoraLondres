@@ -101,7 +101,7 @@ export function QuoteProvider({ children }: { children: React.ReactNode }) {
 
   const getWhatsAppUrl = (clientName?: string) => {
     const rawNumber =
-      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5491123456789';
+      process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '5492216733172';
     const cleanNumber = rawNumber.replace(/\D/g, '');
 
     const greeting = clientName

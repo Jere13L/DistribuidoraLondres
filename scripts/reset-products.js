@@ -1,0 +1,1084 @@
+const fs = require('fs');
+const path = require('path');
+
+const categories = {
+  maquinas: {
+    _id: "cat-maquinas",
+    title: "Máquinas de Corte & Trimmers",
+    slug: "maquinas-corte-trimmers",
+    description: "Clippers inalámbricas, trimmers de terminación, shavers de lámina y kits profesionales de marcas líderes.",
+    icon: "Scissors",
+    image: "/uploads/articulos/wahl-senior-cordless.jpeg"
+  },
+  tijeras: {
+    _id: "cat-tijeras",
+    title: "Tijeras, Navajas & Filos",
+    slug: "tijeras-filos-profesionales",
+    description: "Tijeras de corte microdentadas, filo dulce Solingen, navajas de barbero y hojas de afeitar profesionales.",
+    icon: "Sparkles",
+    image: "/uploads/articulos/treet-platinum-100-pack.jpeg"
+  },
+  secadores: {
+    _id: "cat-secadores",
+    title: "Secadores & Herramientas Térmicas",
+    slug: "secadores-herramientas-termicas",
+    description: "Secadores de alto rendimiento con motor italiano y tecnología cerámica iónica.",
+    icon: "Wind",
+    image: "/uploads/articulos/secador-tucano-8600w.jpeg"
+  },
+  accesorios: {
+    _id: "cat-accesorios",
+    title: "Accesorios, Capas & Barbería",
+    slug: "accesorios-capas-barberia",
+    description: "Capas WMARK, peines de corte, alzas premium, papel de cuello, rociadores y cosmética profesional.",
+    icon: "Package",
+    image: "/uploads/articulos/capa-wmark-negra.jpeg"
+  }
+};
+
+const brands = {
+  wahl: { _id: "b-wahl", name: "Wahl Professional", slug: "wahl" },
+  babyliss: { _id: "b-babyliss", name: "BaBylissPRO", slug: "babyliss-pro" },
+  wmark: { _id: "b-wmark", name: "WMARK Professional", slug: "wmark" },
+  vgr: { _id: "b-vgr", name: "VGR Professional", slug: "vgr" },
+  kemei: { _id: "b-kemei", name: "Kemei Professional", slug: "kemei" },
+  jaguar: { _id: "b-jaguar", name: "Jaguar Solingen", slug: "jaguar" },
+  derby: { _id: "b-derby", name: "Derby Professional", slug: "derby" },
+  treet: { _id: "b-treet", name: "Treet Corporation", slug: "treet" },
+  andis: { _id: "b-andis", name: "Andis Professional", slug: "andis" },
+  dompelo: { _id: "b-dompelo", name: "Dom Pelo", slug: "dom-pelo" },
+  l3vel3: { _id: "b-l3vel3", name: "L3VEL3 Professional", slug: "l3vel3" },
+  infinity: { _id: "b-infinity", name: "Infinity Look's Hair", slug: "infinity" },
+  londress: { _id: "b-londress", name: "Londress Series", slug: "londress-pro" },
+  tucano: { _id: "b-tucano", name: "Tucano Professional", slug: "tucano" },
+  luke: { _id: "b-luke", name: "Luke Paper", slug: "luke" }
+};
+
+const products = [
+  // 1. After shave clásica
+  {
+    _id: "prod-after-shave-clasica",
+    name: "Loción After Shave Clásica Infinity Look's Hair Menthol 120ml",
+    slug: "after-shave-clasica-infinity-menthol-120ml",
+    sku: "INF-AFT-CLAS",
+    category: categories.accesorios,
+    brand: brands.infinity,
+    presentation: "Frasco PET dosificador de 120 ml",
+    shortDescription: "Loción astringente clásica post-afeitado con acción antiséptica inmediata y frescura mentolada prolongada.",
+    description: "La Loción After Shave Clásica Infinity Look's Hair Menthol ha sido especialmente formulada para salones de barbería y el cuidado post-afeitado más exigente. Su fórmula astringente con alcohol puro cosmético y mentol cristalizado cierra instantáneamente los poros abiertos tras el paso de la navaja o máquina shaver, desinfecta micro-cortes dérmicos e inhibe la proliferación bacteriana causante de la foliculitis. Deja una estela fresca, viril y revitalizante sin sensación grasa.",
+    images: [
+      "/uploads/articulos/infinity-locion-posbarba-menthol.jpeg",
+      "/uploads/articulos/infinity-locion-posbarba-2.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Presentación", value: "Frasco PET ámbar de 120 ml con pico vertedor ergonómico" },
+      { key: "Ingredientes Clave", value: "Mentol cristalizado, extracto de hamamelis y alcohol etílico cosmético" },
+      { key: "Efecto", value: "Cierre de poros, acción antiséptica refrescante y alivio de irritación" },
+      { key: "Modo de uso", value: "Aplicar unas gotas sobre las palmas y masajear con toques suaves sobre la piel afeitada" },
+      { key: "Origen", value: "Industria Argentina (fórmula profesional para barberías)" }
+    ]
+  },
+
+  // 2. filos dervi
+  {
+    _id: "prod-filos-derby-extra",
+    name: "Hojas de Afeitar Derby Extra Professional Single Edge (Caja x 100 Filos)",
+    slug: "filos-derby-extra-professional-100",
+    sku: "DRB-EXT-100",
+    category: categories.tijeras,
+    brand: brands.derby,
+    presentation: "Caja dispensadora con 100 medias hojas descartables (Single Edge)",
+    shortDescription: "Filos de acero sueco inoxidable con quíntuple recubrimiento de cromo, cerámica, platino y polímero para un afeitado suave sin tirones.",
+    description: "Las hojas de afeitar Derby Extra Professional Single Edge vienen precortadas de fábrica, listas para insertar de forma directa en cualquier porta navaja de barbero sin necesidad de partir la hoja manualmente. Forjadas con acero inoxidable sueco de alta pureza, cada filo pasa por un proceso de recubrimiento quíntuple: cromo para resistencia al óxido, cerámica para duración del filo, platino para suavidad y polímero PTFE para un deslizamiento sedoso sin irritación.",
+    images: [
+      "/uploads/articulos/navajas-barber-custom.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Formato", value: "Media hoja partida de fábrica (Single Edge lista para navaja)" },
+      { key: "Cantidad", value: "100 filos individuales en envase dispensador higiénico" },
+      { key: "Material", value: "Acero inoxidable sueco templado al vacío" },
+      { key: "Recubrimiento", value: "Quíntuple capa de Cromo, Cerámica, Platino, Tungsteno y Teflón PTFE" },
+      { key: "Compatibilidad", value: "Todos los porta navajas estándar de barbería" },
+      { key: "Filo", value: "Grado de corte suave y tolerante, ideal pieles sensibles" }
+    ]
+  },
+
+  // 3. cepillo fade
+  {
+    _id: "prod-cepillo-fade",
+    name: "Cepillo Fade Brush Barber de Cerdas de Nylon Micro-Densas",
+    slug: "cepillo-fade-brush-barber-nylon",
+    sku: "CEP-FAD-BLK",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Blíster individual con cepillo anatómico de precisión",
+    shortDescription: "Cepillo limpiador de degradados con cerdas ultra suaves que barren el pelo cortado sin raspar ni enrojecer el cuero cabelludo.",
+    description: "El Cepillo Fade Brush es la herramienta de precisión indispensable durante cualquier corte con máquina clipper o shaver. Sus cerdas de nylon suave de alta densidad retiran en una sola pasada el cabello microscópico adherido al cuero cabelludo del cliente, permitiendo observar claramente la sombra del desvanecido sin irritar la piel, incluso tras múltiples pasadas continuas.",
+    images: [
+      "/uploads/articulos/cepillos-fade-brush.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Material del Mango", value: "Polímero ABS mate anti-deslizante con agarre anatómico" },
+      { key: "Cerdas", value: "Nylon micro-fino suave de alta densidad con memoria elástica" },
+      { key: "Largo Total", value: "14 cm con cabezal compacto para maniobrar en nuca y orejas" },
+      { key: "Uso Principal", value: "Limpieza y visualización continua de sombras en degrades (fades)" },
+      { key: "Mantenimiento", value: "Lavable con agua y jabón neutro, apto desinfección con Cool Care" }
+    ]
+  },
+
+  // 4. cepillo talquero
+  {
+    _id: "prod-cepillo-talquero",
+    name: "Cepillo Talquero Quita Pelos Barber con Fuelle Dosificador",
+    slug: "cepillo-talquero-quita-pelos-barber-dosificador",
+    sku: "CEP-TALQ-01",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Caja individual con cepillo talquero recargable",
+    shortDescription: "Talquero profesional de cerdas suaves con depósito hermético integrado y botón pulsador dosificador de talco.",
+    description: "Práctico e higiénico cepillo talquero diseñado para remover pelos del cuello, hombros y rostro al finalizar el servicio. Cuenta con un depósito interno transparente recargable y un pulsador mecánico ergonómico que dosifica la cantidad exacta de talco refrescante directamente a través de las cerdas, logrando una terminación limpia, suave y confortable para el cliente.",
+    images: [
+      "/uploads/articulos/cepillos-fade-brush.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Capacidad", value: "Depósito recargable de 60 g de talco barberil" },
+      { key: "Cerdas", value: "Microfibra sintética extra suave antialérgica de fácil limpieza" },
+      { key: "Mecanismo", value: "Válvula dosificadora de fuelle con pulsador ergonómico central" },
+      { key: "Base", value: "Plana con apoyo vertical firme para estación de trabajo" },
+      { key: "Cierre", value: "Tapa a rosca con sello hermético antiderrames" }
+    ]
+  },
+
+  // 5. peine 18cm
+  {
+    _id: "prod-peine-18cm",
+    name: "Peine de Corte Profesional 18cm con Regla Milimétrica Graduada",
+    slug: "peine-corte-profesional-18cm-regla-milimetrica",
+    sku: "PN-MIL-18CM",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Funda protectora individual de vinilo",
+    shortDescription: "Peine de fibra de carbono antiestático de 18 cm con regla métrica grabada con láser para precisión absoluta en laterales y nuca.",
+    description: "Peine milimetrado de corte profesional de 18 centímetros, fabricado en compuesto de fibra de carbono de alta resistencia térmica (soporta hasta 230 °C). Su regla milimétrica grabada a láser en el lomo permite medir con exactitud simétrica las alturas de capas, laterales y patillas. Púas redondeadas que cuidan el cuero cabelludo y primer diente recortado para particiones ultrarrápidas.",
+    images: [
+      "/uploads/articulos/peine-carbono-profesional.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Largo", value: "18 cm (7 pulgadas estándar internacional)" },
+      { key: "Material", value: "Compuesto de fibra de carbono enriquecida antiestática" },
+      { key: "Graduación", value: "Regla milimétrica en relieve resistente al desgaste químico" },
+      { key: "Resistencia térmica", value: "Hasta 230 °C (apto secador y planchita)" },
+      { key: "Dentado", value: "Mixto (fino y medio) con diente guía para secciones" }
+    ]
+  },
+
+  // 6. alsa plástico
+  {
+    _id: "prod-alzas-plastico",
+    name: "Set de Alzas Peines Guía de Plástico Universales #1 al #8",
+    slug: "set-alzas-peines-guia-plastico-universales",
+    sku: "ALZ-PLS-UNIV",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Blíster sellado con 8 alzas numeradas del 1 al 8 (3 mm a 25 mm)",
+    shortDescription: "Juego completo de 8 alzas plásticas con calce a presión firme y seguro, compatibles con clippers Wahl, Kemei, VGR y WMARK.",
+    description: "Set integral de 8 peines guía fabricados en polímero de ingeniería de alta flexibilidad y resistencia mecánica. Sus dientes redondeados guían el cabello con suavidad hacia la cuchilla sin curvarse ni flexionar durante el paso, garantizando un corte parejo en toda la cabeza. Calce a presión universal apto para la gran mayoría de máquinas de corte estándar del mercado.",
+    images: [
+      "/uploads/articulos/wahl-peine-guia-premium-05.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Medidas incluidas", value: "#1 (3mm), #2 (6mm), #3 (10mm), #4 (13mm), #5 (16mm), #6 (19mm), #7 (22mm), #8 (25mm)" },
+      { key: "Material", value: "Polímero termoplástico semi-rígido de alta durabilidad" },
+      { key: "Compatibilidad", value: "Cuchillas estándar tipo Wahl (Magic Clip, Senior, Super Taper, Kemei 2600, WMARK)" },
+      { key: "Tipo de agarre", value: "Clip de fijación posterior a presión sin holguras" }
+    ]
+  },
+
+  // 7. cool care
+  {
+    _id: "prod-cool-care",
+    name: "Andis Cool Care Plus 5 in 1 Aerosol Refrigerante para Cuchillas 439g",
+    slug: "andis-cool-care-plus-5-en-1-439g",
+    sku: "AND-CCL-439",
+    category: categories.accesorios,
+    brand: brands.andis,
+    presentation: "Aerosol presurizado de 439 gramos (15.5 oz)",
+    shortDescription: "Desinfectante, refrigerante, lubricante, limpiador y antioxidante 5 en 1 para cuchillas de máquinas de corte profesionales.",
+    description: "El producto más utilizado en el mundo por barberos profesionales para el mantenimiento preventivo y de alto rendimiento de sus herramientas. Su fórmula virucida, fungicida y bactericida enfría la cuchilla recalentada en solo 5 segundos mediante un chorro de alta presión que expulsa cabellos retenidos, mientras deposita una película de lubricación fina que reduce la fricción y previene la oxidación sin necesidad de desmontar la máquina.",
+    images: [
+      "/uploads/articulos/andis-cool-care-plus.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Funciones", value: "Enfría, desinfecta, lubrica, limpia y previene la corrosión (5 en 1)" },
+      { key: "Tiempo de enfriamiento", value: "Menos de 5 segundos de aplicación continua" },
+      { key: "Contenido", value: "439 gramos / 15.5 oz netas" },
+      { key: "Pico dosificador", value: "Boquilla Comfort Tip de alta presión focalizada" },
+      { key: "Compatibilidad", value: "Cuchillas de acero al carbono, cromadas, DLC y cerámicas" }
+    ]
+  },
+
+  // 8. gel para afeitar
+  {
+    _id: "prod-gel-para-afeitar",
+    name: "Gel de Afeitar Transparente Dom Pelo Shaving Gel Mentolado 500g",
+    slug: "gel-para-afeitar-transparente-dom-pelo-500g",
+    sku: "DMP-SHV-500",
+    category: categories.accesorios,
+    brand: brands.dompelo,
+    presentation: "Pote con válvula dosificadora de 500 gramos",
+    shortDescription: "Gel no espumígeno de máxima transparencia con mentol y aloe vera para perfilado milimétrico de barba y contornos.",
+    description: "Especialmente formulado para trabajos de precisión en barbería. A diferencia de las espumas tradicionales que tapan la línea de corte, la textura 100% cristalina del gel Dom Pelo permite al profesional ver exactamente por dónde desliza la navaja o cuchilla. Sus activos emolientes ablandan el vello grueso al instante y crean una película deslizante protectora que reduce la fricción y el enrojecimiento.",
+    images: [
+      "/uploads/articulos/dom-pelo-shaving-gel-500g.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Contenido Neto", value: "500 gramos con dispensador pump" },
+      { key: "Fórmula", value: "100% transparente cristalina no espumígena" },
+      { key: "Principios Activos", value: "Mentol estimulante, glicerina humectante y aloe vera calmante" },
+      { key: "Aplicación", value: "Perfilado de barba, contorno de cuello, nuca y cabeza completa" },
+      { key: "Sensación", value: "Frescura intensa de efecto descongestivo" }
+    ]
+  },
+
+  // 9. porta navaja
+  {
+    _id: "prod-porta-navaja",
+    name: "Porta Navaja de Barbero Profesional Londress Series",
+    slug: "porta-navaja-barbero-profesional-londress",
+    sku: "NVJ-PRO-CUST",
+    category: categories.tijeras,
+    brand: brands.londress,
+    presentation: "Estuche individual con porta navaja de precisión",
+    shortDescription: "Porta navaja de barbero con brazo de acero inoxidable 420 y clip de bloqueo de seguridad para medias hojas descartables.",
+    description: "Fabricada para ofrecer un equilibrio de peso perfecto entre el mango anatómico y el brazo portante. Su sistema de traba oscilante con pestaña de presión sujeta la media hoja de afeitar con firmeza milimétrica, impidiendo cualquier desvío o movimiento durante el afeitado al ras o el delineado de cejas y patillas.",
+    images: [
+      "/uploads/articulos/navajas-barber-custom.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Material del Brazo", value: "Acero inoxidable quirúrgico 420 anticorrosión" },
+      { key: "Cierre", value: "Clip basculante con traba de presión reforzada anti-vibración" },
+      { key: "Largo", value: "Abierto: 21.5 cm | Plegado: 14 cm" },
+      { key: "Compatibilidad de Hoja", value: "Media hoja descartable estándar (Derby, Treet, Gillette)" },
+      { key: "Acabado", value: "Grabado láser de alta durabilidad resistente a desinfectantes" }
+    ]
+  },
+
+  // 10. secador Tucano
+  {
+    _id: "prod-secador-tucano",
+    name: "Secador Profesional Tucano HairDryer 8600 Watt Motor AC Italiano",
+    slug: "secador-profesional-tucano-hairdryer-8600w",
+    sku: "TUC-HDR-8600",
+    category: categories.secadores,
+    brand: brands.tucano,
+    presentation: "Caja oficial con secador, 2 boquillas de modelado y manual técnico",
+    shortDescription: "Secador de salón de alta potencia con motor AC italiano de servicio continuo, tecnología iónica y selector de golpe frío.",
+    description: "Herramienta de secado de alto rendimiento construida para soportar jornadas ininterrumpidas en salones y barberías. Su potente motor de corriente alterna genera un flujo de aire concentrado de alta velocidad que acelera los tiempos de secado a la mitad, mientras que su rejilla frontal revestida en cerámica iónica neutraliza la electricidad estática y sella la cutícula capilar.",
+    images: [
+      "/uploads/articulos/secador-tucano-8600w.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Potencia Máxima", value: "8600 W referencia técnica de caudal térmico" },
+      { key: "Tipo de Motor", value: "AC Italiano de larga vida útil (más de 2.000 horas continuas)" },
+      { key: "Velocidades y Temperaturas", value: "2 velocidades de soplado y 3 niveles de temperatura" },
+      { key: "Botón de Frío", value: "Golpe de frío instantáneo para sellar cutícula y peinado" },
+      { key: "Cable", value: "Profesional reforzado de 2.5 metros con ojal para colgar" },
+      { key: "Accesorios", value: "2 boquillas concentradoras de aire (estrecha y ancha)" }
+    ]
+  },
+
+  // 11. vgr 938
+  {
+    _id: "prod-vgr-938",
+    name: "Trimmer Corporal VGR V-938 Edición Oficial AFA Selección Argentina",
+    slug: "trimmer-corporal-vgr-v938-edicion-afa",
+    sku: "VGR-V938-AFA",
+    category: categories.maquinas,
+    brand: brands.vgr,
+    presentation: "Caja premium oficial AFA con base de carga, cable USB y peines guía",
+    shortDescription: "Trimmer corporal y de terminación con cuchilla cerámica Skin-Safe anticortes, luz LED de precisión y resistencia al agua IPX7.",
+    description: "La VGR V-938 combina la licencia oficial de la Asociación del Fútbol Argentino con la más avanzada tecnología para rasurado corporal y de terminación. Cuenta con una cuchilla móvil cerámica con diseño redondeado Skin-Safe que evita pellizcos e irritaciones en zonas delicadas, linterna frontal LED de iluminación directa y batería de litio recargable con base de acople vertical.",
+    images: [
+      "/uploads/articulos/vgr-v938-afa-trimmer.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: true,
+    specifications: [
+      { key: "Cuchilla", value: "Cerámica Skin-Safe hipoalergénica con puntas redondeadas anti-cortes" },
+      { key: "Iluminación", value: "Luz LED frontal integrada para visualización de precisión" },
+      { key: "Resistencia al agua", value: "Certificación IPX7 100% lavable bajo la canilla" },
+      { key: "Batería", value: "Iones de litio de 600 mAh (hasta 90 minutos de uso)" },
+      { key: "Carga", value: "Base vertical de apoyo o conexión directa USB Tipo-C" },
+      { key: "Diseño", value: "Licencia oficial AFA Campeones del Mundo con escudo dorado" }
+    ]
+  },
+
+  // 12. vgr 011
+  {
+    _id: "prod-vgr-011",
+    name: "Máquina de Corte VGR Navigator V-011 Professional Clipper",
+    slug: "maquina-corte-vgr-navigator-v011",
+    sku: "VGR-V011",
+    category: categories.maquinas,
+    brand: brands.vgr,
+    presentation: "Caja de lujo con máquina, 4 peines guía, cable USB, cepillo y lubricante",
+    shortDescription: "Clipper inalámbrica con motor de alto torque de 6.500 RPM, display LED con indicador porcentual de batería y cuchilla semiplana.",
+    description: "La VGR Navigator V-011 es una máquina de corte robusta y confiable, ideal para barberos que buscan potencia y autonomía sin cables a un valor inigualable. Su cuchilla de acero inoxidable de alta retención de filo trabaja en conjunto con una palanca de ajuste lateral metálica para transiciones limpias y fluidas. Pantalla digital que informa el porcentaje exacto de batería restante.",
+    images: [
+      "/uploads/articulos/vgr-v011-clipper.jpeg",
+      "/uploads/articulos/vgr-v011-clipper-2.jpeg",
+      "/uploads/articulos/vgr-v011-clipper-3.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Motor", value: "Rotativo de alto torque 6.500 RPM constante" },
+      { key: "Cuchilla", value: "Acero inoxidable cromado con microdentado Fade" },
+      { key: "Batería", value: "Litio de 2.000 mAh (hasta 180 minutos continuos)" },
+      { key: "Display", value: "Pantalla LCD digital con nivel de carga y aviso de lubricación" },
+      { key: "Palanca de ajuste", value: "Regulable de 0.8 mm a 2.0 mm con clics definidos" },
+      { key: "Peines guía incluidos", value: "4 peines reforzados (3, 6, 9 y 12 mm)" }
+    ]
+  },
+
+  // 13. vgr 275
+  {
+    _id: "prod-vgr-275",
+    name: "Trimmer VGR Voyager V-275 Professional Hair Trimmer Gold",
+    slug: "trimmer-vgr-voyager-v275-gold",
+    sku: "VGR-V275",
+    category: categories.maquinas,
+    brand: brands.vgr,
+    presentation: "Caja metálica de presentación con trimmer, 3 peines guía, cable y aceite",
+    shortDescription: "Trimmer de terminación inalámbrico con cuerpo tallado vintage en relieve dorado, cuchilla T-Blade y motor de 6.500 RPM.",
+    description: "Con su exclusivo cuerpo vintage en relieve dorado y su cuchilla en forma de T con corte al ras (0.1 mm), la VGR Voyager V-275 es ideal para dibujos, contornos de barba, patillas y nuca. Su cabezal suspendido expuesto a 360° ofrece una visión nítida de la línea de corte en cualquier ángulo de trabajo.",
+    images: [
+      "/uploads/articulos/vgr-v275-trimmer-gold.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Cuerpo", value: "Metal fundido con grabado artístico vintage en dorado" },
+      { key: "Cuchilla", value: "T-Blade quirúrgica de acero al carbono de 40 mm expuesta 360°" },
+      { key: "Corte mínimo", value: "0.1 mm (zero-gap estricto para líneas definidas)" },
+      { key: "Batería", value: "Iones de litio (hasta 150 minutos de autonomía)" },
+      { key: "Conexión", value: "Carga rápida USB Tipo-C universal" },
+      { key: "Accesorios", value: "3 peines de alza (1 mm, 2 mm, 3 mm) y cepillo de limpieza" }
+    ]
+  },
+
+  // 14. rociador
+  {
+    _id: "prod-rociador",
+    name: "Rociador Pulverizador Barber Design Pico Regulable 300ml",
+    slug: "rociador-pulverizador-barber-design-300ml",
+    sku: "ROC-PLV-BAR",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Botella plástica transparente serigrafiada con gatillo atomizador",
+    shortDescription: "Atomizador pulverizador ergonómico con depósito de 300 ml y boquilla regulable de niebla ultrafina a chorro continuo.",
+    description: "Rociador de agua profesional para humedecer el cabello antes del corte con tijera o máquina. Su gatillo de acción suave con resorte de retorno rápido reduce la fatiga en los dedos durante jornadas largas. Cuenta con boquilla de bronce/plástico regulable que permite seleccionar desde una bruma pulverizada ultra uniforme hasta un chorro directo.",
+    images: [
+      "/uploads/articulos/rociadores-barber-transparentes.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Capacidad", value: "300 ml con escala de nivel visible" },
+      { key: "Gatillo", value: "Ergonómico de doble pulsación suave con resorte reforzado" },
+      { key: "Boquilla", value: "Regulable (niebla ultrafina o chorro direccional)" },
+      { key: "Material", value: "Plástico PET de alto impacto resistente a químicos de salón" },
+      { key: "Diseño", value: "Gráfica serigrafiada temática barbería clásica de alta nitidez" }
+    ]
+  },
+
+  // 15. Peine plástico
+  {
+    _id: "prod-peine-plastico",
+    name: "Peine Plástico de Corte Profesional Barber Series",
+    slug: "peine-plastico-corte-profesional-barber",
+    sku: "PN-PLS-BAR",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Unidad individual en funda de protección",
+    shortDescription: "Peine de corte plástico flexible y ligero de alta durabilidad, con doble dentado fino y grueso para todo tipo de cabello.",
+    description: "Peine clásico de salón confeccionado en polímero termoplástico flexible de gran resistencia al impacto y al agua. Su diseño de dos zonas dentadas permite peinar tanto melenas densas como desenredar secciones delgadas previas a la tijera, sin tirones ni electricidad estática.",
+    images: [
+      "/uploads/articulos/peines-carbono-dorado.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Material", value: "Polímero termoplástico de alta tenacidad y flexibilidad" },
+      { key: "Dentado", value: "Doble sección (dientes medios desenredantes y dientes finos de tensión)" },
+      { key: "Largo", value: "20 cm de alcance equilibrado" },
+      { key: "Puntas", value: "Púas pulidas y redondeadas anti-arañazos en cuero cabelludo" },
+      { key: "Uso", value: "Corte a tijera, desenredo rápido y peinado en húmedo" }
+    ]
+  },
+
+  // 16. Peine metal
+  {
+    _id: "prod-peine-metal",
+    name: "Peine Metálico Profesional Barber Edición Gold de Precisión",
+    slug: "peine-metalico-profesional-gold-barber",
+    sku: "PN-MET-GLD",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Estuche individual protector",
+    shortDescription: "Peine de aluminio aeronáutico anodizado en dorado, ultraligero e indeformable para detalles de terminación y barbas.",
+    description: "Fabricado en aluminio macizo con baño galvánico dorado resistente a la corrosión y a desinfectantes. No se deforma, no se parte y no genera estática en ningún tipo de cabello. Su peso equilibrado y su acabado suave al tacto ofrecen una experiencia de peinado premium y gran presencia en la estación de trabajo.",
+    images: [
+      "/uploads/articulos/peines-carbono-dorado.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Material", value: "Aleación de aluminio aeronáutico anodizado quirúrgico" },
+      { key: "Acabado", value: "Dorado satinado de alta durabilidad anti-rayas" },
+      { key: "Propiedad", value: "100% libre de estática (anti-frizz natural)" },
+      { key: "Resistencia", value: "Inmune al calor, alcoholes, químicos y tinturas" },
+      { key: "Puntas", value: "Púas fresadas con extremos esféricos suaves" }
+    ]
+  },
+
+  // 17. After level3
+  {
+    _id: "prod-after-level3",
+    name: "Colonia Post-Afeitado L3VEL3 Aftershave Cologne Vibrant 400ml",
+    slug: "colonia-aftershave-l3vel3-vibrant-400ml",
+    sku: "LV3-AFT-400",
+    category: categories.accesorios,
+    brand: brands.l3vel3,
+    presentation: "Botella de 400 ml con pico vertedor",
+    shortDescription: "Colonia aftershave americana de fijación prolongada que hidrata la piel, cierra los poros y deja una fragancia intensa y sofisticada.",
+    description: "La colonia L3VEL3 Aftershave Vibrant combina el poder antiséptico y calmante de un post-afeitado con la estela duradera de una colonia de perfumería fina. Calma la quemazón de la navaja en segundos, hidrata la piel evitando la resequedad y brinda a tus clientes esa fragancia moderna y distintiva que caracteriza a los salones de primer nivel internacional.",
+    images: [
+      "/uploads/articulos/l3vel3-aftershave-vibrant.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Contenido", value: "400 ml / 13.5 fl oz en envase profesional" },
+      { key: "Fragancia", value: "Vibrant (notas cítricas, maderas nobles y ámbar fresco)" },
+      { key: "Acción", value: "Cierra los poros, hidrata y desinfecta la piel recién afeitada" },
+      { key: "Presentación", value: "Botella plástica ergonómica con tapa dosificadora" },
+      { key: "Origen", value: "Fórmula profesional L3VEL3 USA" }
+    ]
+  },
+
+  // 18. Alzas 0,5
+  {
+    _id: "prod-alzas-05",
+    name: "Peine Guía WAHL Premium Cutting Guide # 1/2 con Traba Metálica 1.5mm",
+    slug: "alza-wahl-premium-05-15mm-traba-metalica",
+    sku: "WHL-PG-05",
+    category: categories.accesorios,
+    brand: brands.wahl,
+    presentation: "Blíster oficial individual Wahl Premium",
+    shortDescription: "Peine guía Wahl original de 1.5 mm (#0.5) con clip de enganche metálico de acero inoxidable para calce sin holguras.",
+    description: "El alza más crítica en la técnica del degradado moderno. El peine guía Wahl # 1/2 (1.5 mm) permite conectar de forma invisible la transición entre la máquina a cero abierta y el número 1 cerrado. Su clip posterior de acero templado garantiza que el peine quede completamente fijo a la cuchilla, eliminando cualquier riesgo de desprendimiento accidental durante el corte.",
+    images: [
+      "/uploads/articulos/wahl-peine-guia-premium-05.jpeg",
+      "/uploads/articulos/wahl-peine-guia-premium-05-2.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Medida", value: "# 1/2 (1.5 mm - 1/16 de pulgada)" },
+      { key: "Traba", value: "Clip de acero inoxidable templado con resorte de alta tensión" },
+      { key: "Material", value: "Polímero plástico de ingeniería con fibra de vidrio anti-deformación" },
+      { key: "Dientes", value: "Redondeados para deslizamiento suave sobre el cuero cabelludo" },
+      { key: "Compatibilidad", value: "Clippers Wahl estándar (Magic Clip, Senior, Super Taper, Legend)" }
+    ]
+  },
+
+  // 19. magic clip común
+  {
+    _id: "prod-magic-clip-red",
+    name: "Máquina Wahl 5-Star Cordless Magic Clip Red Clásica",
+    slug: "maquina-wahl-cordless-magic-clip-red-clasica",
+    sku: "WHL-MGC-RED",
+    category: categories.maquinas,
+    brand: brands.wahl,
+    presentation: "Caja individual oficial con cargador, 8 peines guía, peine flat top, aceite y cepillo",
+    shortDescription: "La clipper de desvanecido más famosa del mundo con cuchilla patentada Stagger-Tooth Crunch y motor rotativo de 5.500 RPM.",
+    description: "La Wahl 5-Star Cordless Magic Clip en su icónico acabado borgoña es la máquina de cabecera de las mejores barberías del mundo. Su revolucionaria cuchilla Stagger-Tooth con dientes alternados emite el característico sonido 'Crunch' que le permite al profesional escuchar con precisión cómo y cuándo el cabello está siendo difuminado. Extremadamente ligera (290 gramos) para jornadas prolongadas sin fatiga.",
+    images: [
+      "/uploads/articulos/wahl-senior-cordless.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Motor", value: "Rotativo profesional de 5.500 RPM continuo" },
+      { key: "Cuchilla", value: "Stagger-Tooth 2161 Crunch Blade de acero cromado" },
+      { key: "Batería", value: "Iones de litio sin efecto memoria (100 minutos de uso)" },
+      { key: "Tiempo de carga", value: "120 minutos para carga completa" },
+      { key: "Peso", value: "290 gramos (diseño ultraligero sin fatiga en muñeca)" },
+      { key: "Largo de corte", value: "0.8 mm a 2.5 mm regulable con palanca lateral" }
+    ]
+  },
+
+  // 20. magic clip negra
+  {
+    _id: "prod-magic-clip-black",
+    name: "Máquina Wahl 5-Star Cordless Magic Clip Black & Gold Edition",
+    slug: "maquina-wahl-cordless-magic-clip-black-gold",
+    sku: "WHL-MGC-BG",
+    category: categories.maquinas,
+    brand: brands.wahl,
+    presentation: "Caja de edición especial Black & Gold con base de carga, 8 alzas premium, cargador y accesorios",
+    shortDescription: "Edición premium de la Magic Clip con motor potenciado a 6.500 RPM, cuchillas con revestimiento de titanio y DLC y base de carga.",
+    description: "Versión potenciada y elegante de la legendaria Magic Clip. Incorpora un motor más potente de 6.500 RPM y cuchillas bañadas en Titanio Dorado y DLC (Diamond-Like Carbon) que disipan el calor hasta un 40% más eficientemente y multiplican la resistencia al desgaste. Incluye base de recarga vertical con contacto rápido.",
+    images: [
+      "/uploads/articulos/wahl-magic-clip-black-gold.jpeg",
+      "/uploads/articulos/wahl-magic-clip-black-gold-2.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: true,
+    specifications: [
+      { key: "Motor", value: "Rotativo potenciado a 6.500 RPM de alto rendimiento" },
+      { key: "Cuchilla", value: "Stagger-Tooth con recubrimiento de Titanio Dorado y DLC antifricción" },
+      { key: "Batería", value: "Litio de 2.600 mAh (más de 100 minutos de autonomía)" },
+      { key: "Estación de carga", value: "Base vertical ponderada de contacto dorado incluida" },
+      { key: "Palanca", value: "Metálica de micro-ajuste de altura con clic firme" },
+      { key: "Peso", value: "290 gramos" }
+    ]
+  },
+
+  // 21. walh senior
+  {
+    _id: "prod-wahl-senior",
+    name: "Máquina Wahl Professional 5-Star Cordless Senior Metal Case",
+    slug: "maquina-wahl-cordless-senior-metal-case",
+    sku: "WHL-SNR-01",
+    category: categories.maquinas,
+    brand: brands.wahl,
+    presentation: "Caja oficial Wahl con 3 alzas premium (#1/2, #1, #1 1/2), cargador y aceite",
+    shortDescription: "La máquina inalámbrica más potente de Wahl con carcasa inferior de aluminio y motor rotativo V9000 a 7.000 RPM.",
+    description: "La Wahl Cordless Senior es la bestia de carga pesada de Wahl. Su carcasa inferior de aluminio fundido absorbe las vibraciones y ofrece una sensación de robustez inigualable en la mano. Su motor de alto torque corta con facilidad cabellos gruesos, húmedos o enmarañados sin atascarse. Equipada con cuchilla quirúrgica Fade Blade ajustable a cero (zero-gap).",
+    images: [
+      "/uploads/articulos/wahl-senior-cordless.jpeg",
+      "/uploads/articulos/wahl-senior-cordless-2.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Motor", value: "Rotativo de alto torque V9000 a 7.000 RPM continuo" },
+      { key: "Carcasa", value: "Base metálica de aluminio macizo Heavy Duty" },
+      { key: "Cuchilla", value: "Fade Blade quirúrgica de acero cromado ajustable a 0 gap" },
+      { key: "Batería", value: "Iones de litio de alta densidad (80 minutos continuo)" },
+      { key: "Rango de corte", value: "0.5 mm a 1.2 mm de alta precisión" },
+      { key: "Peso", value: "365 gramos con centro de gravedad balanceado" }
+    ]
+  },
+
+  // 22. w mark ng XL
+  {
+    _id: "prod-wmark-ng-xl",
+    name: "Máquina de Corte WMARK NG-XL Professional High-Speed Clipper",
+    slug: "maquina-corte-wmark-ng-xl-vectorial",
+    sku: "WMK-NG-XL",
+    category: categories.maquinas,
+    brand: brands.wmark,
+    presentation: "Caja rígida con máquina, base de recarga vertical, cuchilla DLC cerámica, 6 alzas magnéticas y cable",
+    shortDescription: "Clipper de última generación con motor magnético vectorial de 9.000 RPM con microchip inteligente que aumenta la potencia según densidad.",
+    description: "La WMARK NG-XL representa el salto a los motores vectoriales en barbería. Su microchip interno sensa la resistencia del cabello y eleva automáticamente el torque del motor de 9.000 RPM cuando atraviesa secciones densas de cabello, garantizando pasadas limpias sin tirones. Cuchilla DLC negra combinada con móvil de cerámica para trabajo en frío durante horas.",
+    images: [
+      "/uploads/articulos/wmark-ng8634-barber-kit.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: true,
+    specifications: [
+      { key: "Motor", value: "Magnético Vectorial controlado por microchip inteligente (9.000 RPM)" },
+      { key: "Cuchilla", value: "Fija DLC Black Diamond + Móvil Cerámica de Zirconio" },
+      { key: "Batería", value: "Litio de 2.500 mAh (150 a 180 minutos de uso)" },
+      { key: "Base de carga", value: "Base vertical con luces de estado LED" },
+      { key: "Alzas", value: "6 peines magnéticos reforzados con imán de neodimio" },
+      { key: "Nivel sonoro", value: "Menos de 60 dB en máxima velocidad" }
+    ]
+  },
+
+  // 23. beby liss gold
+  {
+    _id: "prod-babyliss-gold",
+    name: "Trimmer BaBylissPRO FXONE All-Metal Li-ion Gold Edition",
+    slug: "trimmer-babylisspro-fxone-gold-edition",
+    sku: "BBY-FXONE-GLD",
+    category: categories.maquinas,
+    brand: brands.babyliss,
+    presentation: "Caja de lujo con trimmer, batería FXONE universal, base de carga dual, cuchilla T-Blade 360° y llave de ajuste",
+    shortDescription: "Trimmer totalmente metálico con motor digital sin escobillas N1 de 7.200 RPM y sistema de batería intercambiable FXONE.",
+    description: "El buque insignia de BaBylissPRO para terminaciones, líneas y afeitados al ras. Su cuerpo completamente metálico con moleteado diamante brinda un agarre antideslizante insuperable. Su innovador sistema FXONE permite quitar la batería con un botón para reemplazarla en segundos sin interrumpir el trabajo. Cuchilla dorada expuesta a 360 grados con ajuste a cero estricto.",
+    images: [
+      "/uploads/articulos/babylisspro-fxone-gold.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: true,
+    specifications: [
+      { key: "Motor", value: "Digital N1 Brushless (sin escobillas) de 7.200 RPM" },
+      { key: "Cuchilla", value: "T-Blade dorada expuesta 360° con ajuste a cero milimétrico" },
+      { key: "Batería", value: "Sistema FXONE modular intercambiable de iones de litio" },
+      { key: "Autonomía", value: "Hasta 2.5 horas de uso continuo por batería" },
+      { key: "Cuerpo", value: "Metal macizo moleteado con recubrimiento dorado electrodepositado" },
+      { key: "Tapa", value: "Bisagra magnética de liberación rápida para limpieza interna" }
+    ]
+  },
+
+  // 24. baby liss black
+  {
+    _id: "prod-babyliss-black",
+    name: "Trimmer BaBylissPRO FXONE All-Metal Li-ion Black Edition",
+    slug: "trimmer-babylisspro-fxone-black-edition",
+    sku: "BBY-FXONE-BLK",
+    category: categories.maquinas,
+    brand: brands.babyliss,
+    presentation: "Caja premium con trimmer Black Edition, batería intercambiable FXONE, base y herramientas",
+    shortDescription: "Terminadora profesional en acabado negro mate con motor digital sin escobillas a 7.200 RPM y cuchilla T-Blade de grafito DLC.",
+    description: "La variante Black Edition del sistema FXONE cuenta con una cuchilla en T revestida en Grafito DLC que ofrece un coeficiente de fricción casi nulo, no levanta temperatura y mantiene un filo quirúrgico durante meses. Su motor N1 sin escobillas entrega torque constante independientemente del nivel de carga de la batería.",
+    images: [
+      "/uploads/articulos/babylisspro-fxone-black.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: true,
+    specifications: [
+      { key: "Motor", value: "Digital sin carbones de 7.200 RPM constante" },
+      { key: "Cuchilla", value: "T-Blade Black Graphite DLC (revestimiento de carbono de alta dureza)" },
+      { key: "Sistema de energía", value: "Batería modular FXONE intercambiable al instante" },
+      { key: "Autonomía", value: "150 minutos de funcionamiento continuo" },
+      { key: "Acabado", value: "Negro mate electrochapado anti-rayaduras con grip moleteado" },
+      { key: "Compatibilidad", value: "Baterías y cargadores compartidos con toda la línea FXONE" }
+    ]
+  },
+
+  // 25. afeitadora w mark
+  {
+    _id: "prod-afeitadora-wmark",
+    name: "Afeitadora Shaver WMARK NG-8906 High Speed Barber Shaver 9500 RPM",
+    slug: "afeitadora-shaver-wmark-ng8906-9500rpm",
+    sku: "WMK-NG8906",
+    category: categories.maquinas,
+    brand: brands.wmark,
+    presentation: "Caja con afeitadora shaver, láminas de repuesto, cable USB y cepillo",
+    shortDescription: "Shaver profesional de doble lámina de titanio dorado hipoalergénica con motor ultrarrápido de 9.500 RPM para afeitado a piel cero.",
+    description: "Diseñada para pulir los degradados más altos y lograr una piel absolutamente suave al ras. Sus dos láminas flotantes independientes de titanio dorado hipoalergénico no causan irritación ni quemaduras en cuellos sensibles. Impulsada por un potente micromotor de 9.500 RPM que afeita tanto en seco como con loción previa.",
+    images: [
+      "/uploads/articulos/wmark-ng8906-shaver.jpeg",
+      "/uploads/articulos/wmark-ng8906-shaver-2.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Motor", value: "Rotativo de alta velocidad a 9.500 RPM" },
+      { key: "Cabezal", value: "Doble lámina flotante escalonada de titanio dorado hipoalergénico" },
+      { key: "Batería", value: "Iones de litio de 1.400 mAh (120 minutos de uso)" },
+      { key: "Carga", value: "USB Tipo-C de carga rápida" },
+      { key: "Carcasa", value: "Polímero reforzado con diseño texturado de agarre seguro" },
+      { key: "Corte mínimo", value: "0.0 mm (efecto piel pulida a navaja)" }
+    ]
+  },
+
+  // 26. afeitadora325vgr
+  {
+    _id: "prod-afeitadora-vgr325",
+    name: "Afeitadora Rotativa VGR V-325 Men's Shaver Triple Cabezal 3D",
+    slug: "afeitadora-rotativa-vgr-v325-triple-cabezal",
+    sku: "VGR-V325",
+    category: categories.maquinas,
+    brand: brands.vgr,
+    presentation: "Caja con afeitadora, cable de carga USB, cobertor de cabezal y cepillo",
+    shortDescription: "Afeitadora eléctrica rotativa con 3 cabezales flotantes independientes 3D, resistencia al agua IPX7 y trimmer patillero desplegable.",
+    description: "Afeitadora rotativa versátil para barba, cuello y cabeza completa. Sus 3 cuchillas rotativas con anillos dobles se adaptan automáticamente a los contornos de la mandíbula y el cráneo sin ejercer presión excesiva. Cuenta con trimmer retráctil posterior para emparejar patillas y display digital de batería.",
+    images: [
+      "/uploads/articulos/vgr-v315-shaver.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Sistema de afeitado", value: "Triple cabezal rotativo flotante 3D con doble pista de corte" },
+      { key: "Resistencia al agua", value: "Certificación IPX7 lavable bajo el agua" },
+      { key: "Autonomía", value: "Hasta 90 minutos de uso ininterrumpido" },
+      { key: "Patillera", value: "Trimmer desplegable pop-up integrado en el lomo" },
+      { key: "Pantalla", value: "LED indicador de porcentaje y bloqueo de viaje" },
+      { key: "Carga", value: "USB universal con carga rápida" }
+    ]
+  },
+
+  // 27. tijeras jaguar entresacar
+  {
+    _id: "prod-jaguar-entresacar",
+    name: "Tijera Jaguar Pre Style Relax Entresacar 28 Dientes 5.5 Pulgadas",
+    slug: "tijera-jaguar-pre-style-relax-entresacar-28d",
+    sku: "JAG-ENT-28D",
+    category: categories.tijeras,
+    brand: brands.jaguar,
+    presentation: "Estuche blíster oficial Jaguar Solingen Germany con llave de regulación Vario",
+    shortDescription: "Tijera de pulir y entresacar de 28 dientes microdentados prismáticos fabricada en acero templado en hielo en Solingen, Alemania.",
+    description: "La tijera de pulir por excelencia en peluquerías y barberías profesionales. Forjada con acero inoxidable especial de Solingen y sometida a tratamiento criogénico Friodur (-180 °C) que multiplica la dureza y longevidad del filo. Sus 28 dientes con microdentado en forma de prisma sujetan el pelo con precisión impidiendo que se desplace, logrando transiciones de volumen impecables.",
+    images: [
+      "/uploads/articulos/navajas-barber-custom.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Origen", value: "Solingen, Alemania (original auténtico grabado en hoja)" },
+      { key: "Medida", value: "5.5 pulgadas (14 cm)" },
+      { key: "Dientes", value: "28 dientes prismáticos con microdentado de retención" },
+      { key: "Mango", value: "Diseño Offset ergonómico para relajar la tensión de hombro y muñeca" },
+      { key: "Tornillo", value: "Vario Screw regulable con moneda o llave" },
+      { key: "Acabado", value: "Acero inoxidable satinado mate antirreflejos" }
+    ]
+  },
+
+  // 28. jaguar filo dulce
+  {
+    _id: "prod-jaguar-filo-dulce",
+    name: "Tijera Jaguar Pre Style Ergo Filo Dulce Profesional 5.5 Pulgadas",
+    slug: "tijera-jaguar-pre-style-ergo-filo-dulce-55",
+    sku: "JAG-FD-55",
+    category: categories.tijeras,
+    brand: brands.jaguar,
+    presentation: "Estuche oficial Jaguar Solingen con llave Vario y anillos reductores de dedo",
+    shortDescription: "Tijera de corte recto con filo dulce ('honing') pulido a espejo para cortes limpios, despuntes y técnicas de desfilado continuo.",
+    description: "Máxima precisión alemana en tus manos. La Jaguar Pre Style Ergo Filo Dulce ofrece un deslizamiento suave y un corte contundente de punta a talón. El filo dulce pulido a espejo permite realizar cortes rectos perfectos y deslizarse suavemente en técnicas de desfilado y 'slide cutting' sin masticar la fibra capilar.",
+    images: [
+      "/uploads/articulos/navajas-barber-custom.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Origen", value: "Solingen, Alemania (auténtica garantía alemana)" },
+      { key: "Medida", value: "5.5 pulgadas (14 cm)" },
+      { key: "Filo", value: "Filo Dulce (Honed Blade) pulido de alta retención" },
+      { key: "Forma", value: "Clásica Ergo con apoyadedo desmontable" },
+      { key: "Material", value: "Acero inoxidable alemán con tratamiento térmico Friodur" },
+      { key: "Regulación", value: "Tornillo Vario para ajuste milimétrico de tensión" }
+    ]
+  },
+
+  // 29. kemei km2600
+  {
+    _id: "prod-kemei-km2600",
+    name: "Máquina de Corte Kemei KM-2600 Cordless Precision Fade Clipper",
+    slug: "maquina-corte-kemei-km2600-cordless",
+    sku: "KMI-KM2600",
+    category: categories.maquinas,
+    brand: brands.kemei,
+    presentation: "Caja completa con máquina, 4 peines guía (3, 6, 10, 13 mm), cargador, aceite y peine",
+    shortDescription: "Clipper inalámbrica con potente motor silencioso de 6.000 RPM, palanca de graduación metálica y batería de 2.200 mAh.",
+    description: "La Kemei KM-2600 es famosa entre barberos de todo el mundo por ofrecer un rendimiento y una ergonomía inspirados en los modelos de gama alta a una fracción del costo. Su motor rotativo de 6.000 RPM trabaja con suavidad y bajo nivel de vibración, mientras que su cuchilla de acero inoxidable cromada garantiza cortes nítidos y degradados prolijos.",
+    images: [
+      "/uploads/articulos/kemei-km2600-clipper.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Motor", value: "Rotativo de 6.000 RPM con reducción acústica" },
+      { key: "Cuchilla", value: "Acero inoxidable templado cromado" },
+      { key: "Batería", value: "Iones de litio de 2.200 mAh (120 minutos de uso)" },
+      { key: "Palanca de ajuste", value: "Regulable para desvanecidos suaves" },
+      { key: "Tiempo de carga", value: "180 minutos para recarga total" },
+      { key: "Peines guía", value: "4 medidas estándar incluidas (3, 6, 10, 13 mm)" }
+    ]
+  },
+
+  // 30. Patillera kemei2299
+  {
+    _id: "prod-patillera-kemei2299",
+    name: "Trimmer Kemei KM-2299 Professional Hair Clipper / Trimmer",
+    slug: "trimmer-patillera-kemei-km2299",
+    sku: "KMI-KM2299",
+    category: categories.maquinas,
+    brand: brands.kemei,
+    presentation: "Caja con trimmer, 3 peines guía (1, 2, 3 mm), cable de carga USB y lubricante",
+    shortDescription: "Patillera de terminación con cuchilla T-Blade Black DLC, corte ultra al ras de 0.1 mm y potente motor de 7.500 RPM.",
+    description: "Considerada una de las trimmers más veloces y precisas de su categoría. La Kemei KM-2299 monta una cuchilla en T recubierta en DLC negro que no pellizca la piel y corta a 0.1 mm con facilidad. Su motor acelerado a 7.500 RPM asegura pasadas firmes en contornos de barba, nuca y líneas definidas sin atascos.",
+    images: [
+      "/uploads/articulos/kemei-km2299-clipper.jpeg",
+      "/uploads/articulos/kemei-km2299-clipper-2.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Motor", value: "Alta velocidad de 7.500 RPM de par constante" },
+      { key: "Cuchilla", value: "T-Blade expuesta de acero con recubrimiento Black DLC" },
+      { key: "Corte mínimo", value: "0.1 mm (zero-gap real para delineados)" },
+      { key: "Batería", value: "Litio de 1.200 mAh (hasta 180 minutos de autonomía)" },
+      { key: "Carga", value: "USB Tipo-C universal de carga rápida" },
+      { key: "Peso", value: "Ultraligera, solo 180 gramos para agilidad absoluta" }
+    ]
+  },
+
+  // 31. Filo treet premium
+  {
+    _id: "prod-filo-treet-premium",
+    name: "Hojas de Afeitar Treet Platinum Super Stainless (Pack x 200)",
+    slug: "hojas-afeitar-treet-platinum-pack-200",
+    sku: "TRT-PLT-200",
+    category: categories.tijeras,
+    brand: brands.treet,
+    presentation: "Pack comercial con 20 cajitas x 10 filos (200 hojas dobles)",
+    shortDescription: "Hojas de afeitar dobles Treet Platinum de calidad premium con triple recubrimiento de platino, cromo y PTFE.",
+    description: "Pack económico de alta demanda para salones de barbería con alto volumen diario de afeitados. Cada filo Treet Platinum es fabricado bajo normas de precisión con acero inoxidable de grado quirúrgico y recubierto con micropartículas de Platino para prolongar la nitidez del corte y minimizar la irritación dérmica.",
+    images: [
+      "/uploads/articulos/treet-platinum-200-blades.jpeg",
+      "/uploads/articulos/treet-platinum-100-pack.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Contenido", value: "200 hojas dobles (equivale a 400 filos de uso en navaja partida)" },
+      { key: "Presentación", value: "20 estuches individuales de 10 unidades cada uno" },
+      { key: "Material", value: "Acero inoxidable templado de alta resistencia" },
+      { key: "Recubrimiento", value: "Triple capa Platinum, Chromium y PTFE" },
+      { key: "Envoltorio", value: "Doble papel parafinado individual por hoja" },
+      { key: "Rendimiento", value: "Suavidad extrema y corte limpio sin tirones" }
+    ]
+  },
+
+  // 32. Capas w mark
+  {
+    _id: "prod-capas-wmark",
+    name: "Capa de Barbería WMARK Professional Impermeable y Antiestática",
+    slug: "capa-barberia-wmark-impermeable-antiestatica",
+    sku: "WMK-CAP-01",
+    category: categories.accesorios,
+    brand: brands.wmark,
+    presentation: "Bolsa individual hermética con capa serigrafiada WMARK",
+    shortDescription: "Capa de corte extra grande de 140 x 160 cm en poliéster impermeable con tratamiento antiestático y broches metálicos.",
+    description: "Confeccionada en tela de poliéster sedoso de alta densidad que repele los cabellos cortados impidiendo que se claven en el tejido. Su tratamiento impermeable protege la ropa del cliente contra salpicaduras de agua, tinturas y lociones. Cuenta con cuello elástico de ajuste universal con broches metálicos inoxidables de múltiples posiciones.",
+    images: [
+      "/uploads/articulos/capa-wmark-negra.jpeg",
+      "/uploads/articulos/capa-wmark-negra-2.jpeg",
+      "/uploads/articulos/capa-wmark-blanca.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Dimensiones", value: "140 cm de ancho x 160 cm de largo (cobertura total de cliente)" },
+      { key: "Material", value: "100% poliéster sedoso antiestático e impermeable" },
+      { key: "Cierre del cuello", value: "Cuello elástico ajustable con broches metálicos niquelados" },
+      { key: "Diseño", value: "Variante Negra clásica o Blanca Barber con logo WMARK" },
+      { key: "Limpieza", value: "Lavable a máquina, secado ultra rápido" }
+    ]
+  },
+
+  // 33. Papel de cuello look
+  {
+    _id: "prod-papel-cuello-look-pack5",
+    name: "Papel Cuello Elástico Autoadhesivo Luke Paper Professional (Pack x 5 Rollos)",
+    slug: "papel-cuello-elastico-luke-paper-pack-5-rollos",
+    sku: "LUK-NCK-100",
+    category: categories.accesorios,
+    brand: brands.luke,
+    presentation: "Pack termosellado con 5 rollos (500 tiras en total)",
+    shortDescription: "Rollos de papel de cuello higiénico elástico con tira autoadhesiva médica que previene el ingreso de pelos en la ropa.",
+    description: "La norma de higiene básica en cualquier servicio de barbería y salón. El papel de cuello Luke Paper está elaborado con celulosa pura micro-gofrada con elasticidad de hasta un 200%, adaptándose suavemente al contorno del cuello de cualquier cliente sin ahogar. Su tira de goma autoadhesiva azul sella al contacto impidiendo que los pelos cortados se filtren hacia el cuello de la camisa.",
+    images: [
+      "/uploads/articulos/luke-paper-cuello.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Cantidad", value: "5 rollos de 100 tiras precortadas cada uno (500 servicios)" },
+      { key: "Elasticidad", value: "Hasta 200% de elongación sin romperse" },
+      { key: "Adhesión", value: "Pegamento médico hipoalergénico sensible a la presión" },
+      { key: "Material", value: "Celulosa virgen absorbente de sudor y humedad" },
+      { key: "Higiene", value: "100% descartable de uso único por cliente" }
+    ]
+  },
+
+  // 34. Papel suelto x 1/u
+  {
+    _id: "prod-papel-suelto-individual",
+    name: "Papel de Cuello Elástico Barber Rollo Suelto Individual (100 Tiras)",
+    slug: "papel-cuello-rollo-suelto-individual-100-tiras",
+    sku: "LUK-NCK-01",
+    category: categories.accesorios,
+    brand: brands.luke,
+    presentation: "Rollo individual suelto con 100 tiras precortadas",
+    shortDescription: "Rollo individual de papel de cuello elástico autoadhesivo para reposición ágil en dispensadores de estación.",
+    description: "Formato fraccionado por unidad para profesionales independientes o para reponer dispensadores de mesa de corte. Ofrece la misma calidad de celulosa elástica y adhesivo hipoalergénico que el pack por 5, listo para colocar en cualquier dispensador circular de acrílico o plástico.",
+    images: [
+      "/uploads/articulos/luke-paper-cuello.jpeg"
+    ],
+    inStock: true,
+    featured: false,
+    isNew: false,
+    specifications: [
+      { key: "Contenido", value: "1 rollo individual con 100 tiras precortadas" },
+      { key: "Ancho de tira", value: "6.5 cm de protección en cuello" },
+      { key: "Adhesivo", value: "Banda autoadhesiva azul de fijación instantánea" },
+      { key: "Compatibilidad", value: "Calce estándar para dispensadores de cuello acrílicos" },
+      { key: "Propiedad", value: "Elástico, absorbente y suave con la piel" }
+    ]
+  },
+
+  // 35. Filos trett 100blade
+  {
+    _id: "prod-filos-treet-100",
+    name: "Hojas de Afeitar Treet Platinum Super Stainless (Caja x 100 Filos)",
+    slug: "hojas-afeitar-treet-platinum-caja-100",
+    sku: "TRT-PLT-100",
+    category: categories.tijeras,
+    brand: brands.treet,
+    presentation: "Caja dispensadora con 10 cajitas de 10 filos dobles (100 hojas / 200 usos)",
+    shortDescription: "Caja clásica de 100 hojas dobles Treet Platinum de acero inoxidable con filo de altísima suavidad y precisión.",
+    description: "La caja tradicional de 100 hojas de afeitar dobles Treet Platinum. Reconocida por su filo dulce de corte progresivo que no raspa ni tira de la raíz. Cada hoja viene protegida en doble envoltura de papel encerado para mantener la lubricación de fábrica y evitar la humedad hasta el momento exacto de su uso en el salón.",
+    images: [
+      "/uploads/articulos/treet-platinum-100-pack.jpeg",
+      "/uploads/articulos/treet-platinum-100-londres.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Contenido", value: "100 hojas dobles descartables (200 filos de navaja)" },
+      { key: "Presentación", value: "Caja con 10 dispensadores de 10 unidades cada uno" },
+      { key: "Material", value: "Acero inoxidable sueco templado al vacío" },
+      { key: "Filo", value: "Recubierto en Platino y Polímero PTFE antifricción" },
+      { key: "Seguridad", value: "Papel encerado individual grado hospitalario" }
+    ]
+  },
+
+  // 36. W mark ng 8634 kit
+  {
+    _id: "prod-wmark-ng8634-kit",
+    name: "Kit Barbería WMARK NG-8634 Panther Edition (Clipper + Trimmer)",
+    slug: "kit-barberia-wmark-ng8634-panther-combo",
+    sku: "WMK-NG8634-KIT",
+    category: categories.maquinas,
+    brand: brands.wmark,
+    presentation: "Caja combo de presentación con Clipper + Trimmer, base de carga dual, peines guía y accesorios",
+    shortDescription: "Combo completo de corte y terminación con estación de carga dual simultánea, motores rotativos rápidos y diseño ergonómico Panther.",
+    description: "La solución integral para equipar o renovar la estación de corte con estética uniforme y máxima potencia. El combo WMARK NG-8634 incluye una máquina de corte (Clipper) con motor de 6.500 RPM y palanca de ajuste, más una patillera (Trimmer) a 7.000 RPM con cuchilla en T expuesta. Ambas descansan y se recargan al mismo tiempo sobre una base de carga dual de un solo enchufe.",
+    images: [
+      "/uploads/articulos/wmark-ng8634-barber-kit.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: true,
+    specifications: [
+      { key: "Clipper", value: "Motor rotativo 6.500 RPM, cuchilla fade ajustable, batería 2.500 mAh (240 min)" },
+      { key: "Trimmer", value: "Motor rápido 7.000 RPM, T-blade de 0.1 mm, batería 2.000 mAh (180 min)" },
+      { key: "Base de carga", value: "Estación dual con LEDs indicadores de carga independientes" },
+      { key: "Accesorios incluidos", value: "6 alzas magnéticas para clipper, 3 alzas para trimmer, cable y aceite" },
+      { key: "Carcasa", value: "Polímero mate Panther Black con insertos metálicos" }
+    ]
+  },
+
+  // 37. Cuchilla whal cerámica
+  {
+    _id: "prod-cuchilla-wahl-ceramica",
+    name: "Cuchillas Cerámicas Móviles Fade para Máquinas Wahl (Camufladas y Blancas)",
+    slug: "cuchilla-ceramica-movil-fade-para-wahl",
+    sku: "CCH-CER-CAMO",
+    category: categories.accesorios,
+    brand: brands.londress,
+    presentation: "Blíster sellado con cuchilla móvil cerámica de alta resistencia",
+    shortDescription: "Cuchilla móvil de cerámica de zirconio para máquinas Wahl, disipa un 75% más de calor y no pierde el filo.",
+    description: "Reemplazo directo para la cuchilla móvil metálica de máquinas tipo Wahl. La cerámica de zirconio de grado aeroespacial disipa la temperatura por fricción hasta un 75% más rápido que el acero tradicional, manteniendo la máquina fría incluso tras horas de corte continuo. Además, al no oxidarse ni desgastarse por roce, conserva el filo nítido hasta 5 veces más tiempo.",
+    images: [
+      "/uploads/articulos/cuchilla-ceramica-azul-camo.jpeg",
+      "/uploads/articulos/cuchilla-ceramica-roja-camo.jpeg",
+      "/uploads/articulos/cuchilla-ceramica-verde-camo.jpeg"
+    ],
+    inStock: true,
+    featured: true,
+    isNew: false,
+    specifications: [
+      { key: "Material", value: "Cerámica avanzada de óxido de Zirconio (ZrO2) de alta densidad" },
+      { key: "Temperatura", value: "Reduce el calor de contacto hasta un 75% comparado al acero" },
+      { key: "Compatibilidad", value: "Wahl Magic Clip Cordless, Wahl Senior Cordless, Super Taper, Legend y clones" },
+      { key: "Dientes", value: "Perfil Fade Stagger-Tooth de corte ultra nítido" },
+      { key: "Diseño", value: "Disponibles en acabado Camuflado (Azul, Rojo, Verde) y Blanco Cerámico" }
+    ]
+  }
+];
+
+console.log('Total products defined:', products.length);
+
+// 1. Guardar products.json
+fs.writeFileSync(
+  path.join('src', 'data', 'products.json'),
+  JSON.stringify(products, null, 2),
+  'utf8'
+);
+console.log('Saved src/data/products.json');
+
+// 2. Actualizar conteos de categorias
+const categoriesArray = Object.values(categories).map(cat => ({
+  ...cat,
+  itemCount: products.filter(p => p.category.slug === cat.slug).length
+}));
+fs.writeFileSync(
+  path.join('src', 'data', 'categories.json'),
+  JSON.stringify(categoriesArray, null, 2),
+  'utf8'
+);
+console.log('Saved src/data/categories.json');
+
+// 3. Actualizar mockData.ts
+const mockDataPath = path.join('src', 'data', 'mockData.ts');
+let mockDataContent = fs.readFileSync(mockDataPath, 'utf8');
+
+// Replace mockProducts array
+const mockProductsDeclaration = 'export const mockProducts: Product[] = ' + JSON.stringify(products, null, 2) + ';';
+const beforeProducts = mockDataContent.substring(0, mockDataContent.indexOf('export const mockProducts: Product[] = '));
+const afterProducts = '\n\nexport const initialProducts = mockProducts;\n';
+
+fs.writeFileSync(mockDataPath, beforeProducts + mockProductsDeclaration + afterProducts, 'utf8');
+console.log('Saved src/data/mockData.ts');
